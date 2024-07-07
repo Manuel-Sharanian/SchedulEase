@@ -1,0 +1,81 @@
+﻿@model BeautySalon.Models.Service
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div class="container">
+    <h4 class="page-title">Ծառայություն</h4>
+    <hr />
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <div class="form-group">
+                    <label asp-for="ServiceName" class="control-label"></label>
+                    <input asp-for="ServiceName" class="form-control" />
+                    <span asp-validation-for="ServiceName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Price" class="control-label"></label>
+                    <input asp-for="Price" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+                <div class="form-group text-center">
+                    <input type="submit" value="Պահպանել" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #e0e0e0; /* Slightly lighter background */
+    }
+
+    .container {
+        margin-top: 50px;
+    }
+
+    .page-title {
+        color: #4e4e4e;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .form-control {
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        background-color: #f9f9f9; /* Light gray background */
+        color: #333333; /* Darker text color */
+        border: 1px solid #ccc; /* Border color */
+    }
+
+        .form-control:focus {
+            box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
+            border-color: #808080;
+            background-color: #f1f1f1;
+            color: #333333;
+        }
+
+    .btn-primary {
+        background-color: #4a4a4a;
+        border-color: #4a4a4a;
+    }
+
+        .btn-primary:hover {
+            background-color: #666666;
+            border-color: #666666;
+        }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
