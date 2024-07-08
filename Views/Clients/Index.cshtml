@@ -1,0 +1,56 @@
+﻿@model IEnumerable<BeautySalon.Models.Client>
+
+@{
+    ViewData["Title"] = "Այցելուներ";
+}
+
+<h1 style="color: #4e4e4e; font-family: 'Arial', sans-serif; font-weight: bold;">Այցելուների Ցանկ</h1>
+
+<style>
+    th {
+        vertical-align: top;
+    }
+</style>
+
+<p>
+    <a class="btn btn-success" asp-action="Create" style="text-decoration: none;">Ավելացնել Նոր Այցելու</a>
+</p>
+
+<form class="form-inline my-2 my-lg-0">
+    <div class="input-group">
+        <input type="text" id="searchString" class="form-control" placeholder="Որոնել անձը" aria-label="Search" onkeyup="searchClients()" style="width: 300px;">
+    </div>
+</form>
+
+<div id="searchResults">
+    @Html.Partial("_ClientList", Model)
+</div>
+
+<style>
+    .form-inline .input-group .form-control {
+        padding: 10px;
+        margin-bottom: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+        .form-inline .input-group .form-control:focus {
+            box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
+            border-color: #808080;
+        }
+</style>
+
+@* AJAX Command to search client dynamically *@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+    function searchClients() {
+        var searchString = $('#searchString').val();
+        $.ajax({
+            url: '@Url.Action("Search", "Clients")',
+            data: { searchString: searchString },
+            success: function (data) {
+                $('#searchResults').html(data);
+            }
+        });
+    }
+</script>

@@ -1,0 +1,66 @@
+﻿@model BeautySalon.Models.Service
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<div class="container">
+    <h3 class="page-title">Իսկապես անհրաժեշտ է ջնջել հետևյալ ծառայությունը?</h3>
+    <hr />
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <dl class="row">
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.ServiceName)
+                </dt>
+                <dd class="col-sm-8">
+                    @Html.DisplayFor(model => model.ServiceName)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Price)
+                </dt>
+                <dd class="col-sm-8">
+                    @Html.DisplayFor(model => model.Price)
+                </dd>
+            </dl>
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="Id" />
+                <div class="form-group text-center">
+                    <input type="submit" value="Ջնջել" class="btn btn-danger btn-lg" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #e0e0e0; /* Slightly lighter background */
+    }
+
+    .container {
+        margin-top: 50px;
+    }
+
+    .page-title {
+        color: #4e4e4e;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    dl {
+        font-size: 1.2em;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+</style>
+

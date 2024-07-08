@@ -1,0 +1,169 @@
+﻿@model List<Microsoft.AspNetCore.Identity.IdentityUser>
+@{
+    ViewData["Title"] = "Գլխավոր էջ";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        @if (User.IsInRole("Admin") && Model != null && Model.Any())
+        {
+            foreach (var user in Model)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="service-window animated-window" id="service-@user.Id">
+                        <h3 class="user-name">@user.UserName</h3>
+                        <a href="@Url.Action("Index", "Appointments", new { userId = user.Id })">
+                            <div class="sub-windows">
+                                <div class="sub-window calendar">
+                                    <h3>Գրանցումներ</h3>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts 
+{
+    <script>
+        $(document).ready(function () {
+            // Անմիջապես կանչում ենք animateWindows ֆունկցիան էջի բեռնման ժամանակ
+            setTimeout(animateWindows, 500); // Սպասում ենք 500մվ, որպեսզի էջը լիովին բեռնվի
+
+            function animateWindows() {
+                $('.animated-window').each(function (index) {
+                    var $window = $(this);
+                    setTimeout(function () {
+                        $window.removeClass('hidden-window').css('display', 'block');
+                        setTimeout(function () {
+                            $window.addClass('show');
+                        }, 50);
+                    }, index * 150); // 300մվ հապաղում յուրաքանչյուր պատուհանի համար
+                });
+            }
+
+            // Ավելացնում ենք click իրադարձություն BeautySalon լոգոյի վրա
+            $('.navbar-brand').click(function (e) {
+                e.preventDefault(); // Կանխում ենք հղման սովորական վարքագիծը
+                $('.animated-window').addClass('hidden-window').removeClass('show');
+                setTimeout(animateWindows, 500);
+            });
+
+            // Մնացած կոդը (hover էֆեկտների համար) մնում է նույնը
+            $('.service-window').hover(
+                function () {
+                    $(this).addClass('hovered');
+                    $('.sub-windows', this).addClass('show');
+                },
+                function () {
+                    $(this).removeClass('hovered');
+                    $('.sub-windows', this).removeClass('show');
+                }
+            );
+        });
+    </script>
+
+    <style>
+        .container {
+            margin-top: 0px;
+        }
+
+        .service-window {
+            background-color: #b6b6b6;
+            padding: 20px;
+            border-radius: 20px; 
+            cursor: default;
+            transition: all 0.3s ease;
+            margin-bottom: 5px; 
+            width: 300px; 
+            height: 300px; 
+            overflow: hidden;
+            display: inline-block;
+            position: relative;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
+        }
+
+        .service-window.hovered {
+            background-color: #f0f0f0;
+            transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale3d(1.05, 1.05, 1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            border-color: #818181;
+        }
+
+        .user-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sub-window.calendar {
+            background-color: #262626;
+            padding: 20px;
+            border: none;
+            margin-top: 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .sub-windows {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .sub-windows.show {
+            bottom: 0;
+            animation: slide-up 0.5s ease forwards;
+        }
+
+        @@keyframes slide-up {
+            from { bottom: -100%; }
+            to { bottom: 0%; }
+        }
+
+        .sub-window:hover {
+            background-color: #858585;
+        }
+
+        .sub-window h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #f0f0f0;
+            font-weight: 500;
+        }
+
+        .hidden-window {
+            display: none;
+        }
+
+        .animated-window {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+            .animated-window.show {
+                opacity: 1;
+                transform: scale(1);
+            }
+    </style>
+
+
+
+}
