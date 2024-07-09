@@ -260,3 +260,4 @@ C:\Users\manue\source\repos\BeautySalon\obj\Debug\net8.0\refint\BeautySalon.dll
 C:\Users\manue\source\repos\BeautySalon\obj\Debug\net8.0\BeautySalon.pdb
 C:\Users\manue\source\repos\BeautySalon\obj\Debug\net8.0\BeautySalon.genruntimeconfig.cache
 C:\Users\manue\source\repos\BeautySalon\obj\Debug\net8.0\ref\BeautySalon.dll
+C:\Users\manue\source\repos\BeautySalon\obj\Debug\net8.0\BeautySalon.sourcelink.json

@@ -13,8 +13,6 @@ namespace BeautySalon.Models
     {
         public Appointment? Appointment { get; set; }
         public Service? Service { get; set; }
-
-
         public string? UserId { get; set; }
     }
 }
