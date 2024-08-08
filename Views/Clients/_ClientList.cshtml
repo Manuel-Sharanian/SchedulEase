@@ -1,4 +1,7 @@
 ﻿@model IEnumerable<Client>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 
 <table class="table table-bordered table-hover">
     <thead class="thead-light">
@@ -8,8 +11,10 @@
             <th style="width: 20%;">@Html.DisplayNameFor(model => model.DateOfBirth)</th>
             <th style="width: 20%;">@Html.DisplayNameFor(model => model.PhoneNumber)</th>
             <th style="width: 10%;">@Html.DisplayNameFor(model => model.FirstAppointmentDate)</th>
-@*             <th style="width: 20%;">Պատմություն</th> <!-- Նոր սյունյակ --> *@
-            <th style="width: 10%;"></th>
+            @if (User.IsInRole("Admin"))
+            {
+                <th style="width: 10%;"></th>
+            }
         </tr>
     </thead>
     <tbody>
@@ -21,22 +26,24 @@
                 <td>@Html.DisplayFor(modelItem => item.DateOfBirth)</td>
                 <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
                 <td>@Html.DisplayFor(modelItem => item.FirstAppointmentDate)</td>
-@*                 <td>
-                    <!-- Նոր սյունյակ համար -->
-                    @foreach (var appointment in item.Appointments)
-                    {
-                        <div>@appointment.FirstName - @appointment.PhoneNumber</div>
-                    }
-                </td> *@
-                <td>
-                    <div class="btn-group" role="group" aria-label="Operations">
-                        <a class="btn btn-info" asp-action="Edit" asp-route-id="@item.Id" style="text-decoration: none; margin-right: 5px;">Ուղղել</a>
-                        <a class="btn btn-secondary" asp-action="Details" asp-route-id="@item.Id" style="text-decoration: none; margin-right: 5px;">Մանրամասներ</a>
-                        <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.Id" style="text-decoration: none;">Ջնջել</a>
-                    </div>
-                </td>
+                @if (User.IsInRole("Admin"))
+                {
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Operations">
+                            <a class="btn btn-info" asp-action="Edit" asp-route-id="@item.Id" style="text-decoration: none; margin-right: 5px;">Ուղղել</a>
+                            <a class="btn btn-secondary" asp-action="Details" asp-route-id="@item.Id" style="text-decoration: none; margin-right: 5px;">Մանրամասներ</a>
+                            <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.Id" style="text-decoration: none;">Ջնջել</a>
+                        </div>
+                    </td>
+                }
             </tr>
         }
     </tbody>
 </table>
 
+<style>
+    .btn-info, .btn-secondary, .btn-danger {
+        padding: 5px;
+        width: auto;
+    }
+</style>

@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using Microsoft.AspNetCore.Mvc.Rendering;
+
 namespace BeautySalon.Models
 {
     public class Service

@@ -18,7 +18,7 @@
                     <td>@user.FullName</td>
                     <td>@string.Join(", ", user.Roles)</td>
                     <td>
-                        <form asp-action="ChangeRole" method="post" class="d-flex">
+                        <form asp-action="ChangeRole" method="post" class="d-flex mb-2">
                             <input type="hidden" name="userId" value="@user.Id" />
                             <select name="newRole" class="form-control mr-2 custom-select">
                                 <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
@@ -30,6 +30,7 @@
                 </tr>
             }
         </tbody>
+        <a asp-controller="IncomeReport" asp-action="Index" class="btn btn-info">Եկամտի հաշվետվություն</a>
     </table>
 </div>
 

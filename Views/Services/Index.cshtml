@@ -1,4 +1,7 @@
 ﻿@model IEnumerable<BeautySalon.Models.Service>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 
 @{
     ViewData["Title"] = "Ծառայություններ";
@@ -6,9 +9,12 @@
 
 <h1 class="text-center mb-4 page-title">Ծառայություններ</h1>
 
-<p>
-    <a class="btn btn-success" asp-action="Create" style="text-decoration: none;">Ավելացնել Նոր Ծառայություն</a>
-</p>
+@if (User.IsInRole("Admin"))
+{
+    <p>
+        <a class="btn btn-success" asp-action="Create" style="text-decoration: none;">Ավելացնել Նոր Ծառայություն</a>
+    </p>
+}
 
 <form class="form-inline my-2 my-lg-0">
     <div class="input-group">

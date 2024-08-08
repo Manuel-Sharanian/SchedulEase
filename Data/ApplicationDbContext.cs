@@ -19,6 +19,9 @@ namespace BeautySalon.Data
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Service> Services { get; set; }
+        public DbSet<UserSavedReport> UserSavedReports { get; set; }
+        public DbSet<IncomeReport> IncomeReports { get; set; }
+        public DbSet<UserIncomeReport> UserIncomeReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

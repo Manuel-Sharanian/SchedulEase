@@ -2,40 +2,72 @@
 @{
     string time = ViewBag.Time as string;
     string returnUrl = ViewBag.ReturnUrl;
+    ViewData["Title"] = Model.UserName ?? "Սեփական Գրանցումներ";
 }
 
-<h2 style="color: #4a4a4a;">Ուղղել Գրանցումը</h2>
+<h2 style="color: #4a4a4a;">Ուղղել Գրանցումը - @Model.UserName</h2>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+
+@if (ViewBag.IsAdmin)
+{
+    <div class="user-selection-container">
+        @foreach (var user in Model.Users)
+        {
+            <div class="user-item @(user.Value == Model.SelectedUserId ? "selected" : "")" data-userid="@user.Value">
+                @user.Text
+            </div>
+        }
+    </div>
+}
 
 <form asp-action="Edit">
     <input type="hidden" asp-for="Id" />
     <input type="hidden" name="returnUrl" value="@returnUrl" />
+    <input type="hidden" asp-for="UserId" />
+    <input type="hidden" asp-for="UserName" />
+    <input type="hidden" id="originalServicePrice" value="@Model.OriginalServicePrice" />
+    <input type="hidden" asp-for="SelectedUserId" id="selectedUserId" />
+
     <div class="form-group">
         <label asp-for="FirstName" style="color: #ffffff;">Անուն</label>
         <input asp-for="FirstName" class="form-control bg-light-grey" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label asp-for="PhoneNumber" style="color: #ffffff;">Հեռախոսահամար</label>
         <input asp-for="PhoneNumber" class="form-control bg-light-grey" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
     </div>
-    <div class="form-group">
+    <div class="form-group date-picker-wrapper">
         <label asp-for="AppointmentDate" style="color: #ffffff;">Գրանցման Օր</label>
-        <input asp-for="AppointmentDate" class="form-control bg-light-grey" type="date" />
+        <div class="date-picker-container">
+            <input id="appointment-date-display" class="form-control bg-light-grey clickable-field" type="text" readonly />
+            <input asp-for="AppointmentDate" id="appointment-date-picker" type="hidden" />
+        </div>
+        <span asp-validation-for="AppointmentDate" class="text-danger"></span>
     </div>
     <div class="form-group" style="margin-bottom: 10px;">
         <label asp-for="AppointmentHour" class="control-label" style="color: #ffffff;"></label>
         <select asp-for="AppointmentHour" class="form-control bg-light-grey" asp-items="ViewBag.HourOptions">
             <option value="@time">@time</option>
-            <!-- Other options can be added here if necessary -->
         </select>
         <span asp-validation-for="AppointmentHour" class="text-danger"></span>
     </div>
     <div class="form-group">
         <label asp-for="ServiceId" style="color: #ffffff;">Ծառայություն</label>
-        <select asp-for="ServiceId" asp-items="Model.Services" class="form-control bg-light-grey"></select>
-        <span asp-validation-for="ServiceId" class="text-danger"></span>
+        <div class="service-selection-container">
+            <input type="text" id="serviceSearch" class="form-control bg-light-grey" placeholder="Որոնել ծառայությունը կամ մուտքագրել նորը" value="@(Model.CustomServiceName ?? Model.Services.FirstOrDefault(s => s.Selected)?.Text ?? "")" />
+            <div id="serviceList" class="service-list-container">
+                <!-- Ծառայությունների ցանկը կլցվի JavaScript-ով -->
+            </div>
+        </div>
+        <input type="hidden" asp-for="ServiceId" id="selectedServiceId" />
+        <input type="hidden" asp-for="CustomServiceName" id="customServiceName" />
     </div>
     <div class="form-group">
-        <label asp-for="CustomPrice" style="color: #ffffff;">Հատուկ Գին</label>
+        <label asp-for="CustomPrice" style="color: #ffffff;">Գին</label>
         <input asp-for="CustomPrice" class="form-control bg-light-grey" type="number" step="0.01" />
     </div>
     <div class="form-group">
@@ -51,70 +83,313 @@
     </div>
 </form>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $('#ServiceId').change(function () {
-            var selectedServiceId = $(this).val();
-            $.ajax({
-                url: '@Url.Action("GetServicePrice", "Appointments")',
-                type: 'GET',
-                data: { serviceId: selectedServiceId },
-                success: function (price) {
-                    $('#CustomPrice').val(price);
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            let isCalendarOpen = false;
+
+            $("#appointment-date-display").datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: "-0:+1",
+                beforeShow: function (input, inst) {
+                    setTimeout(function () {
+                        inst.dpDiv.css({
+                            top: $(".date-picker-container").offset().top + $(".date-picker-container").outerHeight(),
+                            left: $(".date-picker-container").offset().left
+                        });
+                    }, 0);
+                },
+                onSelect: function (dateText, inst) {
+                    var date = $(this).datepicker('getDate');
+                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
+                    $("#appointment-date-picker").val(formattedDate);
+                    isCalendarOpen = false;
                 }
             });
+
+            // Set initial date
+            var initialDate = $("#appointment-date-picker").val();
+            if (initialDate) {
+                $("#appointment-date-display").datepicker("setDate", new Date(initialDate));
+            }
+
+            $('.date-picker-container').on('click', function (e) {
+                e.stopPropagation(); // Prevent the click from reaching the document
+                if (isCalendarOpen) {
+                    $("#appointment-date-display").datepicker("hide");
+                    isCalendarOpen = false;
+                } else {
+                    $("#appointment-date-display").datepicker("show");
+                    isCalendarOpen = true;
+                }
+            });
+
+            // Close calendar when clicking outside
+            $(document).on('click', function () {
+                if (isCalendarOpen) {
+                    $("#appointment-date-display").datepicker("hide");
+                    isCalendarOpen = false;
+                }
+            });
+
+            // Prevent the calendar from closing when clicking on it
+            $('.ui-datepicker').on('click', function (e) {
+                e.stopPropagation();
+            });
+
+            $('#ServiceId').change(function () {
+                var selectedServiceId = $(this).val();
+                $.ajax({
+                    url: '@Url.Action("GetServicePrice", "Appointments")',
+                    type: 'GET',
+                    data: { serviceId: selectedServiceId },
+                    success: function (price) {
+                        $('#CustomPrice').val(price);
+                    }
+                });
+            });
+
+            var serviceList = $("#serviceList");
+            var serviceSearch = $("#serviceSearch");
+            var selectedServiceId = $("#selectedServiceId");
+            var customPriceInput = $("#CustomPrice");
+            var originalServicePrice = $("#originalServicePrice");
+
+            // Ծառայությունների ցուցակի ցուցադրում/թաքցնում
+            serviceSearch.on("click", function () {
+                serviceList.toggle();
+            });
+
+            // Փակել ցուցակը, եթե սեղմվել է այլ տեղ
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".service-selection-container").length) {
+                    serviceList.hide();
+                }
+            });
+
+            function loadServices() {
+                $.ajax({
+                    url: '@Url.Action("GetAllServices", "Appointments")',
+                    type: 'GET',
+                    success: function (services) {
+                        serviceList.empty();
+                        services.forEach(function (service) {
+                            serviceList.append('<div class="service-item" data-id="' + service.id + '" data-price="' + service.price + '">' + service.serviceName + '</div>');
+                        });
+
+                        // Ընտրված ծառայության ցուցադրում
+                        var initialServiceId = selectedServiceId.val();
+                        if (initialServiceId) {
+                            var initialService = services.find(s => s.id == initialServiceId);
+                            if (initialService) {
+                                serviceSearch.val(initialService.serviceName);
+                                // Ստուգում ենք՝ արդյոք CustomPrice-ը տարբերվում է օրիգինալ գնից
+                                if (parseFloat(customPriceInput.val()) === parseFloat(originalServicePrice.val())) {
+                                    customPriceInput.val(initialService.price);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Ծառայությունների բեռնում էջի բացման ժամանակ
+            loadServices();
+
+            // Որոնում
+            serviceSearch.on("change", function () {
+                if ($(this).val() === "") {
+                    selectedServiceId.val("");
+                    customPriceInput.val("0");
+                }
+            });
+
+            serviceSearch.on("input", function () {
+                var searchTerm = $(this).val().toLowerCase();
+                var matchFound = false;
+                $(".service-item").each(function () {
+                    var serviceName = $(this).text().toLowerCase();
+                    if (serviceName.indexOf(searchTerm) > -1) {
+                        $(this).show();
+                        matchFound = true;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                if (!matchFound && searchTerm.length > 0) {
+                    $("#customServiceName").val(searchTerm);
+                    $("#selectedServiceId").val("");
+                    $("#CustomPrice").val("0.00");
+                } else {
+                    $("#customServiceName").val("");
+                }
+            });
+
+            // Ծառայության ընտրություն
+            serviceList.on("click", ".service-item", function () {
+                var selectedService = $(this);
+                serviceSearch.val(selectedService.text());
+                $("#selectedServiceId").val(selectedService.data("id"));
+                $("#customServiceName").val("");
+                $("#CustomPrice").val(selectedService.data("price"));
+                serviceList.hide();
+            });
+
+            $('#SelectedUserId').change(function () {
+                // Պահպանել ընտրված ամսաթիվը
+                var selectedDate = $('#appointment-date-picker').val();
+
+                // Վերականգնել ընտրված ամսաթիվը
+                $('#appointment-date-picker').val(selectedDate);
+                $("#appointment-date-display").datepicker("setDate", new Date(selectedDate));
+            });
+
+            $('.user-item').on('click', function () {
+                $('.user-item').removeClass('selected');
+                $(this).addClass('selected');
+                $('#selectedUserId').val($(this).data('userid'));
+
+                // You might want to reload some data based on the selected user
+                // For example, you could reload available time slots
+                // loadAvailableTimeSlots();
+            });
+
         });
-    });
-</script>
+    </script>
+}
 
 <style>
     body {
-        background-color: #f2f2f2; /* Light grey background for the entire page */
-        color: #ffffff; /* White text color for all text */
+        background-color: #f2f2f2;
+        color: #ffffff;
     }
 
     h2 {
-        font-size: 24px; /* Larger font size for headings */
+        font-size: 24px;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 20px; /* Added margin for spacing */
+        margin-bottom: 20px;
     }
 
     .form-group {
-        margin-bottom: 20px; /* Added space between form groups */
+        margin-bottom: 20px;
     }
 
     .btn-primary {
-        background-color: #4a4a4a; /* Dark grey button background */
+        background-color: #4a4a4a;
         border-color: #4a4a4a;
-        color: #ffffff; /* White button text */
+        color: #ffffff;
     }
 
         .btn-primary:hover {
-            background-color: #666666; /* Darken on hover */
+            background-color: #666666;
             border-color: #666666;
         }
 
     .btn-lg {
-        padding: 10px 40px; /* Larger padding for larger button */
-        font-size: 18px; /* Larger font size for button text */
+        padding: 10px 40px;
+        font-size: 18px;
     }
 
     .form-control {
-        background-color: #cccccc; /* Light grey background for form controls */
-        color: #333333; /* Dark text color for form controls */
+        background-color: #cccccc;
+        color: #333333;
     }
 
         .form-control:focus {
-            box-shadow: none; /* Remove focus box shadow */
+            box-shadow: none;
         }
 
     .text-danger {
-        color: #dc3545; /* Red color for validation messages */
+        color: #dc3545;
     }
+
+    .clickable-field {
+        cursor: pointer;
+    }
+
+    .date-picker-wrapper {
+        position: relative;
+    }
+
+    .date-picker-container {
+        cursor: pointer;
+    }
+
+        .date-picker-container input[type="text"] {
+            background-color: #cccccc;
+            color: #333333;
+        }
+
+
+    .service-selection-container {
+        position: relative;
+    }
+
+    .service-list-container {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 115px;
+        overflow-y: auto;
+        background-color: #333;
+        border: 1px solid #818181;
+        z-index: 1000;
+    }
+
+    .service-item {
+        padding: 10px;
+        cursor: pointer;
+    }
+
+        .service-item:hover {
+            background-color: #787878;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    .user-selection-container {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        margin-bottom: 20px;
+        padding: 10px 0;
+    }
+
+    .user-item {
+        flex: 0 0 auto;
+        padding: 10px 20px;
+        margin-right: 10px;
+        background-color: #4a4a4a;
+        color: #ffffff;
+        cursor: pointer;
+        border-radius: 20px;
+        transition: background-color 0.3s ease;
+    }
+
+        .user-item:hover {
+            background-color: #666666;
+        }
+
+        .user-item.selected {
+            background-color: #007bff;
+        }
 </style>
-
-
-
-

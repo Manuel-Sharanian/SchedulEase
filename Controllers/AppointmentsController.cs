@@ -42,6 +42,9 @@ namespace BeautySalon.Controllers
             // Հակառակ դեպքում օգտագործում ենք ընթացիկ օգտատիրոջ Id-ն
             var targetUserId = isAdmin && !string.IsNullOrEmpty(userId) ? userId : currentUser.Id;
 
+            // Ստուգում ենք՝ արդյոք դիտվում են սեփական գրանցումները
+            var isViewingOwnAppointments = targetUserId == currentUser.Id;
+
             DateTime date = selectedDate ?? DateTime.Today;
             var appointments = await _context.Appointments
                 .Include(a => a.Client)
@@ -53,11 +56,13 @@ namespace BeautySalon.Controllers
             {
                 Appointment = a,
                 Service = a.Service,
-                UserId = a.UserId
+                UserId = a.UserId,
+                EffectivePrice = a.CustomPrice.HasValue ? (a.CustomPrice.Value == 0 ? 0 : a.CustomPrice.Value) : a.Service?.Price ?? 0
             }).ToList();
 
             var completedAppointments = appointments.Where(a => a.IsCompleted);
-            var totalCompletedAmount = completedAppointments.Sum(a => a.CustomPrice != 0 ? a.CustomPrice : a.Service.Price);
+            var totalCompletedAmount = completedAppointments.Sum(a =>
+                a.CustomPrice.HasValue ? (a.CustomPrice.Value == 0 ? 0 : a.CustomPrice.Value) : a.Service?.Price ?? 0);
             var completedCount = completedAppointments.Count();
             // Appointment Index էջում UserName-ի համար
             if (!string.IsNullOrEmpty(userId))
@@ -72,58 +77,59 @@ namespace BeautySalon.Controllers
                     ViewBag.UserName = "Սեփական գրանցումներ";
                 }
             }
+            // User-ների էջում իրանց եկամտի մասին
+            var incomeReport = await _context.IncomeReports
+           .Include(r => r.UserReports)
+           .FirstOrDefaultAsync(r => r.Date.Date == date.Date);
+
+            if (incomeReport != null)
+            {
+                var userReport = incomeReport.UserReports.FirstOrDefault(ur => ur.UserId == targetUserId);
+                if (userReport != null)
+                {
+                    ViewBag.EmployeeAmount = userReport.EmployeeAmount;
+                    ViewBag.EmployerAmount = userReport.EmployerAmount;
+                }
+            }
+
+
             ViewBag.SelectedDate = date;
             ViewBag.TotalCompletedAmount = totalCompletedAmount;
             ViewBag.CompletedCount = completedCount;
             ViewBag.IsAdmin = isAdmin;
             ViewBag.TargetUserId = targetUserId;
+            ViewBag.IsViewingOwnAppointments = isViewingOwnAppointments;
 
             return View(viewModels);
         }
 
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UserAppointments(string userId, DateTime? selectedDate)
-        {
-            DateTime date = selectedDate ?? DateTime.Today;
-
-            var appointments = await _context.Appointments
-                .Include(a => a.Client)
-                .Include(a => a.Service)
-                .Where(a => a.UserId == userId && a.AppointmentDate.Date == date.Date)
-                .ToListAsync();
-
-            var viewModels = appointments.Select(a => new AppointmentViewModel
-            {
-                Appointment = a,
-                Service = a.Service,
-                UserId = a.UserId
-            }).ToList();
-
-            var completedAppointments = appointments.Where(a => a.IsCompleted);
-            var totalCompletedAmount = completedAppointments.Sum(a => a.CustomPrice != 0 ? a.CustomPrice : a.Service.Price);
-            var completedCount = completedAppointments.Count();
-
-            ViewBag.SelectedDate = date;
-            ViewBag.TotalCompletedAmount = totalCompletedAmount;
-            ViewBag.CompletedCount = completedCount;
-            ViewBag.IsAdmin = true;
-            ViewBag.UserId = userId;
-
-            return View("Index", viewModels);
-        }
-
         [HttpPost]
         [Route("Appointments/MarkCompleted/{id}")]
-        public IActionResult MarkCompleted(int id)
+        public async Task<IActionResult> MarkCompleted(int id)
         {
-            var appointment = _context.Appointments.Find(id);
+            var appointment = await _context.Appointments.FindAsync(id);
             if (appointment != null)
             {
                 appointment.IsCompleted = true;
-                _context.SaveChanges();
-                return Ok();
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true });
             }
             return NotFound();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckZeroValueAppointments(DateTime date, string userId)
+        {
+            var appointments = await _context.Appointments
+                .Include(a => a.Service)
+                .Where(a => a.AppointmentDate.Date == date.Date && a.UserId == userId)
+                .ToListAsync();
+
+            bool hasZeroValueAppointments = appointments.Any(a =>
+                (a.CustomPrice.HasValue && a.CustomPrice.Value == 0) &&
+                (a.Service == null || a.Service.Price == 0));
+
+            return Json(new { hasZeroValueAppointments });
         }
 
         public List<SelectListItem> GetHourOptions()
@@ -131,7 +137,7 @@ namespace BeautySalon.Controllers
             var hourOptions = new List<SelectListItem>();
 
             // Add options for each hour from 06:00 to 20:00 in the 24-hour format with 30-minute increments
-            for (int hour = 8; hour < 20; hour++)
+            for (int hour = 6; hour < 20; hour++)
             {
                 hourOptions.Add(new SelectListItem { Text = $"{hour:00}:00", Value = $"{hour:00}:00" });
                 hourOptions.Add(new SelectListItem { Text = $"{hour:00}:30", Value = $"{hour:00}:30" });
@@ -139,36 +145,65 @@ namespace BeautySalon.Controllers
             return hourOptions;
         }
 
-        private async Task<bool> IsTimeSlotAvailableForUser(DateTime date, TimeSpan startTime, int duration, string userId)
+        private async Task<bool> IsTimeSlotAvailableForUser(DateTime date, TimeSpan startTime, int duration, string userId, int? currentAppointmentId = null)
         {
             var endTime = startTime.Add(TimeSpan.FromMinutes(duration));
-            var conflictingAppointments = await _context.Appointments
-                .Where(a => a.AppointmentDate.Date == date.Date && a.UserId == userId)
-                .ToListAsync();
+            var startMinutes = (int)startTime.TotalMinutes;
+            var endMinutes = (int)endTime.TotalMinutes;
 
-            return !conflictingAppointments.Any(a =>
-                (a.AppointmentHour >= startTime && a.AppointmentHour < endTime) ||
-                (a.AppointmentHour.Add(TimeSpan.FromMinutes(a.Duration)) > startTime && a.AppointmentHour < endTime));
+            var conflictingAppointments = await _context.Appointments
+                .Where(a => a.UserId == userId &&
+                            a.AppointmentDate.Date == date.Date &&
+                            ((a.AppointmentHour.Hours * 60 + a.AppointmentHour.Minutes < endMinutes &&
+                              a.AppointmentHour.Hours * 60 + a.AppointmentHour.Minutes + a.Duration > startMinutes) ||
+                             (a.AppointmentHour.Hours * 60 + a.AppointmentHour.Minutes == startMinutes && a.Duration == duration)) &&
+                            (currentAppointmentId == null || a.Id != currentAppointmentId))
+                .AnyAsync();
+
+            return !conflictingAppointments;
         }
 
         // GET: Appointments/Create
-        public IActionResult Create(DateTime? date, string time, string userId)
+        public async Task<IActionResult> Create(string userId)
         {
-            ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName");
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return Challenge();
+            }
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            var appointment = new Appointment();
+
+            string targetUserId;
+            if (isAdmin && !string.IsNullOrEmpty(userId))
+            {
+                targetUserId = userId;
+                appointment.UserId = userId;
+                appointment.IsCreatedByAdmin = true;
+            }
+            else
+            {
+                targetUserId = currentUser.Id;
+                appointment.UserId = currentUser.Id;
+                appointment.IsCreatedByAdmin = false;
+            }
+            // Ստանում ենք թիրախային օգտատիրոջ անունը
+            var targetUser = await _userManager.FindByIdAsync(targetUserId);
+            ViewBag.UserName = targetUser != null ? targetUser.UserName : "Անհայտ օգտատեր";
+
             ViewBag.HourOptions = GetHourOptions();
-            ViewBag.Date = date;
-            ViewBag.Time = time;
-            ViewBag.UserId = userId; // Pass userId to the view
-            return View();
+            ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName");
+            ViewBag.UserId = appointment.UserId;
+            ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
+            return View(appointment);
         }
 
 
         // POST: Appointments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,PhoneNumber,AppointmentDate,AppointmentHour,Duration,ClientId,ServiceId,UserId")] Appointment appointment)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,PhoneNumber,AppointmentDate,AppointmentHour,Duration,ClientId,ServiceId,UserId,IsCreatedByAdmin,CustomServiceName")] Appointment appointment)
         {
             if (ModelState.IsValid)
             {
@@ -188,6 +223,8 @@ namespace BeautySalon.Controllers
                         ModelState.AddModelError("UserId", "Selected user does not exist.");
                         ViewBag.HourOptions = GetHourOptions();
                         ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
+                        ViewBag.UserId = appointment.UserId;
+                        ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
                         return View(appointment);
                     }
                     appointment.IsCreatedByAdmin = true;
@@ -198,18 +235,23 @@ namespace BeautySalon.Controllers
                     appointment.IsCreatedByAdmin = false;
                 }
 
-
-                // Check if the time slot is available for the target user
                 bool isAvailable = await IsTimeSlotAvailableForUser(appointment.AppointmentDate, appointment.AppointmentHour, appointment.Duration, appointment.UserId);
                 if (!isAvailable)
                 {
-                    ModelState.AddModelError("", "The selected time slot is already occupied. Please choose another time.");
+                    ModelState.AddModelError("", "Ընտրված ժամանակահատվածը զբաղված է. Խնդրում ենք ընտրել այլ ժամ.");
+                    ViewBag.SelectedDate = appointment.AppointmentDate;
+                    ViewBag.SelectedTime = appointment.AppointmentHour.ToString(@"hh\:mm");
+                    ViewBag.SelectedServiceId = appointment.ServiceId;
                     ViewBag.HourOptions = GetHourOptions();
                     ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
+                    ViewBag.UserId = appointment.UserId;
+                    ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
+                    var user = await _userManager.FindByIdAsync(appointment.UserId);
+                    ViewBag.UserName = user != null ? user.UserName : "Անհայտ օգտատեր";
                     return View(appointment);
                 }
 
-                // Check if the client already exists
+                // Check if the client already exists Ստուգում ենք արդյոք հաճախորդը գոյություն ունի բազայում թե ոչ
                 //var existingClient = await _context.Clients.FirstOrDefaultAsync(c => c.PhoneNumber == appointment.PhoneNumber);
                 //if (existingClient != null)
                 //{
@@ -234,13 +276,31 @@ namespace BeautySalon.Controllers
                 //            appointment.Client = existingClient;
                 //        }
 
-                // Ensure the selected service exists
-                var service = await _context.Services.FindAsync(appointment.ServiceId);
-                if (service == null)
+                if (appointment.ServiceId.HasValue)
                 {
-                    ModelState.AddModelError("ServiceId", "The selected service does not exist.");
+                    var service = await _context.Services.FindAsync(appointment.ServiceId.Value);
+                    if (service == null)
+                    {
+                        ModelState.AddModelError("ServiceId", "The selected service does not exist.");
+                        ViewBag.HourOptions = GetHourOptions();
+                        ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
+                        return View(appointment);
+                    }
+                    appointment.CustomPrice = service.Price;
+                }
+                else if (!string.IsNullOrEmpty(appointment.CustomServiceName))
+                {
+                    appointment.CustomPrice = 0;
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Պետք է ընտրել ծառայություն կամ մուտքագրել նոր ծառայության անվանում.");
                     ViewBag.HourOptions = GetHourOptions();
                     ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
+                    ViewBag.UserId = appointment.UserId;
+                    ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
+                    var user = await _userManager.FindByIdAsync(appointment.UserId);
+                    ViewBag.UserName = user != null ? user.UserName : "Անհայտ օգտատեր";
                     return View(appointment);
                 }
 
@@ -251,75 +311,251 @@ namespace BeautySalon.Controllers
 
             ViewBag.HourOptions = GetHourOptions();
             ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
+            ViewBag.UserId = appointment.UserId;
+            ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
             return View(appointment);
         }
 
-
         // GET: Appointments/Edit/5
-        public IActionResult Edit(int id, string returnUrl)
+        public async Task<IActionResult> Edit(int id, string returnUrl)
         {
-            var appointment = _context.Appointments
+            var appointment = await _context.Appointments
                 .Include(a => a.Service)
-                .FirstOrDefault(a => a.Id == id);
-            ViewBag.HourOptions = GetHourOptions();
-            ViewBag.Time = appointment.AppointmentHour.ToString(@"hh\:mm");
-            ViewBag.ReturnUrl = returnUrl;
+                .FirstOrDefaultAsync(a => a.Id == id);
+
             if (appointment == null)
             {
                 return NotFound();
             }
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+
+            var users = await _userManager.Users
+                .Select(u => new SelectListItem
+                {
+                    Value = u.Id,
+                    Text = u.UserName
+                })
+                .ToListAsync();
+
+            var user = await _userManager.FindByIdAsync(appointment.UserId);
             var viewModel = new AppointmentEditViewModel
             {
                 Id = appointment.Id,
+                UserId = appointment.UserId,
+                UserName = user?.UserName ?? "Անհայտ օգտատեր",
                 FirstName = appointment.FirstName,
                 PhoneNumber = appointment.PhoneNumber,
                 AppointmentDate = appointment.AppointmentDate,
                 AppointmentHour = appointment.AppointmentHour,
                 ServiceId = appointment.ServiceId,
-                CustomPrice = appointment.CustomPrice,
-                Services = _context.Services.Select(s => new SelectListItem
+                CustomServiceName = appointment.CustomServiceName,
+                CustomPrice = appointment.CustomPrice ?? appointment.Service?.Price ?? 0,
+                Duration = appointment.Duration,
+                Services = await _context.Services.Select(s => new SelectListItem
                 {
                     Value = s.Id.ToString(),
                     Text = s.ServiceName,
                     Selected = s.Id == appointment.ServiceId
-                }).ToList()
+                }).ToListAsync(),
+                Users = users,
+                SelectedUserId = appointment.UserId
             };
+
+            ViewBag.HourOptions = GetHourOptions();
+            ViewBag.Time = appointment.AppointmentHour.ToString(@"hh\:mm");
+            ViewBag.ReturnUrl = returnUrl;
+            ViewBag.UserName = (await _userManager.FindByIdAsync(appointment.UserId))?.UserName ?? "Անհայտ օգտատեր";
+            ViewBag.IsAdmin = isAdmin;
+
             return View(viewModel);
         }
+        private async Task<List<SelectListItem>> GetUserSelectList()
+        {
+            return await _userManager.Users
+                .Select(u => new SelectListItem
+                {
+                    Value = u.Id,
+                    Text = u.UserName
+                })
+                .ToListAsync();
+        }
 
-        // POST: Appointments/Edit/5
+        [HttpGet]
+        public IActionResult GetAllServices()
+        {
+            var services = _context.Services.Select(s => new { id = s.Id, serviceName = s.ServiceName, price = s.Price }).ToList();
+            return Json(services);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateAmount(int id, string amount)
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.Service)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            if (string.IsNullOrWhiteSpace(amount) || amount == "0")
+            {
+                appointment.CustomPrice = 0;
+            }
+            else if (decimal.TryParse(amount, out decimal parsedAmount))
+            {
+                appointment.CustomPrice = parsedAmount;
+            }
+            else
+            {
+                return BadRequest("Անվավեր գումար");
+            }
+
+            await _context.SaveChangesAsync();
+
+            decimal effectivePrice = appointment.CustomPrice ?? 0;
+            string formattedAmount = effectivePrice == 0 ?
+                "0.00 ֏" :
+                string.Format("{0:#,##0.00 ֏}", effectivePrice);
+
+            return Json(new
+            {
+                formattedAmount = formattedAmount,
+                isCustomPrice = appointment.CustomPrice.HasValue && appointment.CustomPrice.Value > 0
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateService(int appointmentId, int? serviceId, string serviceName)
+        {
+            var appointment = await _context.Appointments.FindAsync(appointmentId);
+            if (appointment == null)
+            {
+                return Json(new { success = false, errorMessage = "Նշանակումը չի գտնվել" });
+            }
+
+            if (serviceId.HasValue)
+            {
+                var service = await _context.Services.FindAsync(serviceId.Value);
+                if (service == null)
+                {
+                    return Json(new { success = false, errorMessage = "Ծառայությունը չի գտնվել" });
+                }
+                appointment.ServiceId = service.Id;
+                appointment.CustomPrice = service.Price;
+            }
+            else
+            {
+                // Եթե serviceId-ն null է, նշանակում է մուտքագրվել է նոր ծառայություն
+                appointment.ServiceId = null;
+                appointment.CustomServiceName = serviceName;
+                // Գինը թողնում ենք նույնը կամ սահմանում ենք 0, կախված ձեր պահանջներից
+                appointment.CustomPrice = 0;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                formattedPrice = string.Format("{0:#,##0.00 ֏}", appointment.CustomPrice)
+            });
+        }
+
+
+
+        // Edit GET POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(AppointmentEditViewModel viewModel, string returnUrl)
+        public async Task<IActionResult> Edit(AppointmentEditViewModel viewModel, string returnUrl)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+
             if (ModelState.IsValid)
             {
-                var appointment = _context.Appointments
+                var appointment = await _context.Appointments
                     .Include(a => a.Service)
-                    .FirstOrDefault(a => a.Id == viewModel.Id);
+                    .FirstOrDefaultAsync(a => a.Id == viewModel.Id);
 
                 if (appointment == null)
                 {
                     return NotFound();
                 }
 
+                // Եթե ադմինիստրատոր է և փոխել է օգտատիրոջը
+                if (isAdmin && viewModel.SelectedUserId != appointment.UserId)
+                {
+                    // Ստուգում ենք, արդյոք ընտրված ժամը հասանելի է նոր օգտատիրոջ համար
+                    bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, viewModel.SelectedUserId);
+                    if (!isAvailable)
+                    {
+                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածն արդեն զբաղված է ընտրված օգտատիրոջ համար: Խնդրում ենք ընտրել այլ ժամ:");
+                        viewModel.Users = await GetUserSelectList();
+                        ViewBag.HourOptions = GetHourOptions();
+                        ViewBag.ReturnUrl = returnUrl;
+                        ViewBag.IsAdmin = isAdmin;
+
+                        viewModel.Services = await _context.Services.Select(s => new SelectListItem
+                        {
+                            Value = s.Id.ToString(),
+                            Text = s.ServiceName,
+                            Selected = s.Id == viewModel.ServiceId
+                        }).ToListAsync();
+
+                        return View(viewModel);
+                    }
+                    appointment.UserId = viewModel.SelectedUserId;
+                }
+                else
+                {
+                    // Ստուգում ենք, արդյոք ընտրված ժամը հասանելի է
+                    bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, appointment.UserId, appointment.Id);
+                    if (!isAvailable)
+                    {
+                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածն արդեն զբաղված է: Խնդրում ենք ընտրել այլ ժամ:");
+                        viewModel.Users = await GetUserSelectList();
+                        ViewBag.HourOptions = GetHourOptions();
+                        ViewBag.ReturnUrl = returnUrl;
+                        ViewBag.IsAdmin = isAdmin;
+
+                        viewModel.Services = await _context.Services.Select(s => new SelectListItem
+                        {
+                            Value = s.Id.ToString(),
+                            Text = s.ServiceName,
+                            Selected = s.Id == viewModel.ServiceId
+                        }).ToListAsync();
+
+                        return View(viewModel);
+                    }
+                }
+
+                // Update other properties
                 appointment.FirstName = viewModel.FirstName;
                 appointment.PhoneNumber = viewModel.PhoneNumber;
                 appointment.AppointmentDate = viewModel.AppointmentDate;
                 appointment.AppointmentHour = viewModel.AppointmentHour;
-                appointment.ServiceId = viewModel.ServiceId;
-                appointment.CustomPrice = viewModel.CustomPrice;
 
-                // Թարմացնում ենք Service-ը
-                var newService = _context.Services.Find(viewModel.ServiceId);
-                if (newService != null)
+                if (!string.IsNullOrEmpty(viewModel.CustomServiceName))
                 {
-                    appointment.Service = newService;
+                    appointment.ServiceId = null;
+                    appointment.CustomServiceName = viewModel.CustomServiceName;
+                    appointment.CustomPrice = 0;
+                }
+                else
+                {
+                    appointment.ServiceId = viewModel.ServiceId;
+                    appointment.CustomServiceName = null;
+                    appointment.CustomPrice = viewModel.CustomPrice;
                 }
 
+                appointment.Duration = viewModel.Duration;
+
                 _context.Update(appointment);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 if (!string.IsNullOrEmpty(returnUrl))
                 {
@@ -329,18 +565,22 @@ namespace BeautySalon.Controllers
             }
 
             // Եթե ModelState-ը վավեր չէ
-            viewModel.Services = _context.Services.Select(s => new SelectListItem
+            viewModel.Users = await GetUserSelectList();
+            ViewBag.HourOptions = GetHourOptions();
+            ViewBag.ReturnUrl = returnUrl;
+            ViewBag.IsAdmin = isAdmin;
+
+            viewModel.Services = await _context.Services.Select(s => new SelectListItem
             {
                 Value = s.Id.ToString(),
                 Text = s.ServiceName,
                 Selected = s.Id == viewModel.ServiceId
-            }).ToList();
+            }).ToListAsync();
 
-            // Ավելացնում ենք HourOptions-ը
-            ViewBag.HourOptions = GetHourOptions();
-            ViewBag.ReturnUrl = returnUrl;
             return View(viewModel);
         }
+
+
 
         // GET: Appointments/Delete/5
         public async Task<IActionResult> Delete(int? id, string returnUrl)
@@ -400,5 +640,104 @@ namespace BeautySalon.Controllers
             return _context.Appointments.Any(e => e.Id == id);
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SaveIncomeReport([FromBody] IncomeReportViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingReport = await _context.IncomeReports
+                        .Include(r => r.UserReports)
+                        .FirstOrDefaultAsync(r => r.Date.Date == model.Date.Date);
+
+                    if (existingReport == null)
+                    {
+                        existingReport = new IncomeReport
+                        {
+                            Date = model.Date,
+                            TotalEmployeeAmount = model.EmployeeAmount,
+                            TotalEmployerAmount = model.EmployerAmount,
+                            UserReports = new List<UserIncomeReport>
+                    {
+                        new UserIncomeReport
+                        {
+                            UserId = model.UserId,
+                            EmployeeAmount = model.EmployeeAmount,
+                            EmployerAmount = model.EmployerAmount
+                        }
+                    }
+                        };
+                        _context.IncomeReports.Add(existingReport);
+                    }
+                    else
+                    {
+                        var userReport = existingReport.UserReports.FirstOrDefault(ur => ur.UserId == model.UserId);
+                        if (userReport == null)
+                        {
+                            userReport = new UserIncomeReport
+                            {
+                                UserId = model.UserId,
+                                EmployeeAmount = model.EmployeeAmount,
+                                EmployerAmount = model.EmployerAmount
+                            };
+                            existingReport.UserReports.Add(userReport);
+                        }
+                        else
+                        {
+                            userReport.EmployeeAmount = model.EmployeeAmount;
+                            userReport.EmployerAmount = model.EmployerAmount;
+                        }
+                        existingReport.TotalEmployeeAmount = existingReport.UserReports.Sum(ur => ur.EmployeeAmount);
+                        existingReport.TotalEmployerAmount = existingReport.UserReports.Sum(ur => ur.EmployerAmount);
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    return Json(new
+                    {
+                        Success = true,
+                        TotalEmployeeAmount = existingReport.TotalEmployeeAmount,
+                        TotalEmployerAmount = existingReport.TotalEmployerAmount
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { Success = false, ErrorMessage = ex.Message });
+                }
+            }
+            return Json(new { Success = false, ErrorMessage = "Invalid model state" });
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetIncomeDistribution(DateTime date, string userId)
+        {
+            var incomeReport = await _context.IncomeReports
+                .Include(r => r.UserReports)
+                .FirstOrDefaultAsync(r => r.Date.Date == date.Date);
+
+            if (incomeReport != null)
+            {
+                var userReport = incomeReport.UserReports.FirstOrDefault(ur => ur.UserId == userId);
+                if (userReport != null)
+                {
+                    var totalAmount = userReport.EmployeeAmount + userReport.EmployerAmount;
+                    var employeePercentage = totalAmount > 0 ? (userReport.EmployeeAmount / totalAmount) * 100 : 0;
+                    var employerPercentage = totalAmount > 0 ? (userReport.EmployerAmount / totalAmount) * 100 : 0;
+
+                    return Json(new
+                    {
+                        employeeAmount = userReport.EmployeeAmount,
+                        employerAmount = userReport.EmployerAmount,
+                        employeePercentage = Math.Round(employeePercentage, 2),
+                        employerPercentage = Math.Round(employerPercentage, 2)
+                    });
+                }
+            }
+
+            return Json(null);
+        }
     }
 }

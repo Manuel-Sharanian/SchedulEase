@@ -62,6 +62,7 @@ namespace BeautySalon.Areas.Identity.Pages.Account.Manage
             [Required]
             [Display(Name = "User name")]
             public string UserName { get; set; }
+
         }
 
         private async Task LoadAsync(IdentityUser user)

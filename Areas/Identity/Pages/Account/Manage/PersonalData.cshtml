@@ -1,33 +1,44 @@
 ﻿@page
 @model PersonalDataModel
 @{
-    ViewData["Title"] = "Personal Data";
+    ViewData["Title"] = "Անձնական տվյալներ";
     ViewData["ActivePage"] = ManageNavPages.PersonalData;
 }
 
-<h3>@ViewData["Title"]</h3>
-
-<div class="row justify-content-center my-4">
-    <div class="col-md-8 manage-data-container">
-        <h4 class="text-center mb-3">Manage Your Personal Data</h4>
-        <p>
-            <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
-        </p>
-@*         <form id="download-data" asp-page="DownloadPersonalData" method="post">
-            <button class="btn btn-light btn-block mt-2" type="submit">Download</button>
-        </form> *@
-        <p class="text-center mt-3">
-            <a id="delete" asp-page="DeletePersonalData" class="btn btn-danger btn-block">Delete</a>
-        </p>
+@if (User.IsInRole("Admin"))
+{
+    <div class="container">
+        <h3>@ViewData["Title"]</h3>
+        <div class="row justify-content-center my-4">
+            <div class="col-md-8 manage-data-container">
+                <h4 class="text-center mb-3">Անձնական տվյալներ</h4>
+                <p>
+                    <strong>Այս կոճակը կջնջի ձեր հաշիվը, որը հնարավոր չէ վերականգնել:</strong>
+                </p>
+                <p class="text-center mt-3">
+                    <a id="delete" asp-page="DeletePersonalData" class="btn btn-danger btn-lg">Ջնջել</a>
+                </p>
+            </div>
+        </div>
     </div>
-</div>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
 
 <style>
-    /* Custom styling for the manage personal data section */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .container {
+        background-color: #e9ecef;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
     .manage-data-container {
         background-color: #6c757d; /* Bootstrap secondary color */
         color: #ffffff; /* White text color */
@@ -40,11 +51,13 @@
             color: #e2e3e5; /* Lighter grey for the heading */
         }
 
-        .manage-data-container .btn-light {
-            color: #6c757d; /* Match button text color to the background */
+        .manage-data-container .btn-danger {
+            background-color: #dc3545; /* Danger button background */
+            border-color: #dc3545; /* Danger button border */
         }
 
-        .manage-data-container .btn-danger {
-            color: #ffffff; /* White text for delete button */
-        }
+            .manage-data-container .btn-danger:hover {
+                background-color: #c82333; /* Darker shade on hover */
+                border-color: #bd2130; /* Darker border on hover */
+            }
 </style>

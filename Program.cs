@@ -1,4 +1,5 @@
-using BeautySalon.Data;
+﻿using BeautySalon.Data;
+using BeautySalon.Middleware;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -88,6 +89,8 @@ namespace BeautySalon
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseMiddleware<RedirectMiddleware>();
 
             app.MapControllerRoute(
                 name: "default",

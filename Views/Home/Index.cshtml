@@ -3,35 +3,133 @@
     ViewData["Title"] = "Գլխավոր էջ";
 }
 
+
+
 <div class="container mt-5">
     <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="date-picker-row">
+                <div class="date-picker-container">
+                    <h3 class="text-center mb-3">Ընտրեք ամսաթիվը</h3>
+                    <div class="date-picker-wrapper">
+                        <button id="prevDay" class="btn btn-secondary">&lt;</button>
+                        <input type="text" id="reportDate" class="form-control" readonly>
+                        <button id="nextDay" class="btn btn-secondary">&gt;</button>
+                    </div>
+                    <input type="hidden" id="reportDateHidden" value="@DateTime.Now.ToString("dd-MM-yyyy")">
+                </div>
+            </div>
+        </div>
         @if (User.IsInRole("Admin") && Model != null && Model.Any())
         {
             foreach (var user in Model)
             {
                 <div class="col-md-3 mb-4">
-                    <div class="service-window animated-window" id="service-@user.Id">
-                        <h3 class="user-name">@user.UserName</h3>
-                        <a href="@Url.Action("Index", "Appointments", new { userId = user.Id })">
+                    <a href="#" class="service-window-link" data-userid="@user.Id">
+                        <div class="service-window animated-window" id="service-@user.Id">
+                            <h3 class="user-name">@user.UserName</h3>
                             <div class="sub-windows">
                                 <div class="sub-window calendar">
                                     <h3>Գրանցումներ</h3>
                                 </div>
                             </div>
-                        </a>
-                    </div>
+                        </div>
+                    </a>
                 </div>
             }
         }
     </div>
 </div>
 
-@section Scripts 
+@section Scripts
 {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script>
         $(document).ready(function () {
-            // Անմիջապես կանչում ենք animateWindows ֆունկցիան էջի բեռնման ժամանակ
-            setTimeout(animateWindows, 500); // Սպասում ենք 500մվ, որպեսզի էջը լիովին բեռնվի
+            // Set current date on page load
+            var today = new Date();
+            $("#reportDate").datepicker("setDate", today);
+            var formattedDate = $.datepicker.formatDate('yy-mm-dd', today);
+            $("#reportDateHidden").val(formattedDate);
+            updateLinks(formattedDate);
+
+
+            let isCalendarOpen = false;
+
+            $("#reportDate").datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: "-0:+1",
+                onSelect: function (dateText, inst) {
+                    var date = $(this).datepicker('getDate');
+                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
+                    $("#reportDateHidden").val(formattedDate);
+                    updateLinks(formattedDate);
+                    isCalendarOpen = false;
+                }
+            });
+
+            function changeDate(days) {
+                var currentDate = $("#reportDate").datepicker('getDate');
+                currentDate.setDate(currentDate.getDate() + days);
+                $("#reportDate").datepicker("setDate", currentDate);
+                var formattedDate = $.datepicker.formatDate('yy-mm-dd', currentDate);
+                $("#reportDateHidden").val(formattedDate);
+                updateLinks(formattedDate);
+            }
+
+            $('.date-picker-container').on('click', function () {
+                if (isCalendarOpen) {
+                    $("#reportDate").datepicker("hide");
+                    isCalendarOpen = false;
+                } else {
+                    $("#reportDate").datepicker("show");
+                    isCalendarOpen = true;
+                }
+            });
+
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.date-picker-container, .ui-datepicker').length) {
+                    $("#reportDate").datepicker("hide");
+                    isCalendarOpen = false;
+                }
+            });
+
+            // Set initial date
+            var initialDate = $("#reportDateHidden").val();
+            if (initialDate) {
+                $("#reportDate").datepicker("setDate", new Date(initialDate));
+                updateLinks(initialDate);
+            }
+
+            $("#prevDay").on("click", function (e) {
+                e.stopPropagation(); // Կանխում ենք իրադարձության տարածումը
+                var selectedDate = $("#reportDate").datepicker('getDate');
+                selectedDate.setDate(selectedDate.getDate() - 1);
+                $("#reportDate").datepicker("setDate", selectedDate);
+                updateLinks($.datepicker.formatDate('yy-mm-dd', selectedDate));
+            });
+
+            $("#nextDay").on("click", function (e) {
+                e.stopPropagation(); // Կանխում ենք իրադարձության տարածումը
+                var selectedDate = $("#reportDate").datepicker('getDate');
+                selectedDate.setDate(selectedDate.getDate() + 1);
+                $("#reportDate").datepicker("setDate", selectedDate);
+                updateLinks($.datepicker.formatDate('yy-mm-dd', selectedDate));
+            });
+
+            function updateLinks(date) {
+                $('.service-window-link').each(function () {
+                    var userId = $(this).data('userid');
+                    var newHref = '@Url.Action("Index", "Appointments")' + '?userId=' + userId + '&selectedDate=' + date;
+                    $(this).attr('href', newHref);
+                });
+            }
+
+            setTimeout(animateWindows, 500);
 
             function animateWindows() {
                 $('.animated-window').each(function (index) {
@@ -41,28 +139,15 @@
                         setTimeout(function () {
                             $window.addClass('show');
                         }, 50);
-                    }, index * 150); // 300մվ հապաղում յուրաքանչյուր պատուհանի համար
+                    }, index * 150);
                 });
             }
 
-            // Ավելացնում ենք click իրադարձություն BeautySalon լոգոյի վրա
             $('.navbar-brand').click(function (e) {
-                e.preventDefault(); // Կանխում ենք հղման սովորական վարքագիծը
+                e.preventDefault();
                 $('.animated-window').addClass('hidden-window').removeClass('show');
                 setTimeout(animateWindows, 500);
             });
-
-            // Մնացած կոդը (hover էֆեկտների համար) մնում է նույնը
-            $('.service-window').hover(
-                function () {
-                    $(this).addClass('hovered');
-                    $('.sub-windows', this).addClass('show');
-                },
-                function () {
-                    $(this).removeClass('hovered');
-                    $('.sub-windows', this).removeClass('show');
-                }
-            );
         });
     </script>
 
@@ -71,15 +156,21 @@
             margin-top: 0px;
         }
 
+        .service-window-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
         .service-window {
             background-color: #b6b6b6;
             padding: 20px;
-            border-radius: 20px; 
-            cursor: default;
+            border-radius: 20px;
+            cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 5px; 
-            width: 300px; 
-            height: 300px; 
+            margin-bottom: 5px;
+            width: 300px;
+            height: 300px;
             overflow: hidden;
             display: inline-block;
             position: relative;
@@ -88,12 +179,12 @@
             transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1);
         }
 
-        .service-window.hovered {
-            background-color: #f0f0f0;
-            transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale3d(1.05, 1.05, 1.05);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            border-color: #818181;
-        }
+            .service-window:hover {
+                background-color: #f0f0f0;
+                transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale3d(1.05, 1.05, 1.05);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+                border-color: #818181;
+            }
 
         .user-name {
             font-size: 24px;
@@ -115,26 +206,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
         }
 
         .sub-windows {
             position: absolute;
-            bottom: -100%;
+            bottom: 0;
             left: 0;
             width: 100%;
             transition: all 0.2s ease;
             border: none;
-        }
-
-        .sub-windows.show {
-            bottom: 0;
-            animation: slide-up 0.5s ease forwards;
-        }
-
-        @@keyframes slide-up {
-            from { bottom: -100%; }
-            to { bottom: 0%; }
         }
 
         .sub-window:hover {
@@ -162,8 +242,49 @@
                 opacity: 1;
                 transform: scale(1);
             }
+
+        .date-picker-row {
+            display: flex;
+            justify-content: flex-start;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .date-picker-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 300px; /* Կամ ցանկացած այլ լայնություն, որը ցանկանում եք */
+        }
+
+        .date-picker-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #reportDate {
+            width: 120px;
+            text-align: center;
+            font-size: 1.1em;
+            margin: 0 10px;
+        }
+
+        #prevDay, #nextDay {
+            font-size: 1.1em;
+            padding: 5px 12px;
+            background-color: #808080;
+            border-color: #808080;
+        }
+
+            #prevDay:hover, #nextDay:hover {
+                background-color: #666666;
+                border-color: #666666;
+            }
+
+        .ui-datepicker {
+            font-size: 1.1em;
+        }
     </style>
-
-
-
 }

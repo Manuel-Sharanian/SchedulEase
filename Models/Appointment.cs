@@ -20,24 +20,29 @@ namespace BeautySalon.Models
         [DataType(DataType.Time)]
         public TimeSpan AppointmentHour { get; set; }
 
+        [Required(ErrorMessage = "Անունը պարտադիր է")]
         [Display(Name = "Անուն")]
         public string? FirstName { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Հեռախոսահամարը պարտադիր է")]
+        [Phone(ErrorMessage = "Անվավեր հեռախոսահամար")]
         [Display(Name = "Հեռախոսահամար")]
         [DataType(DataType.PhoneNumber)]
-        [RegularExpression(@"^\d{9}$", ErrorMessage = "The phone number must be 9 digits long.")]
+        [RegularExpression(@"^\d{9}$", ErrorMessage = "Հեռախոսահամարը պետք է լինի 9 նիշ.")]
         public string? PhoneNumber { get; set; }
         public Client? Client { get; set; }
 
 
 
         // One-to-many relationship
-        public int ServiceId { get; set; }
+        public int? ServiceId { get; set; }
         public Service? Service { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal CustomPrice { get; set; }
+
+        public decimal? CustomPrice { get; set; }
+
+        public string? CustomServiceName { get; set; }
         public int Duration { get; set; } // Duration in minutes (e.g., 30, 60, 90)
 
         public bool IsCompleted { get; set; }

@@ -4,71 +4,284 @@
     ViewData["Title"] = "Create";
     DateTime? date = ViewBag.Date as DateTime?;
     string time = ViewBag.Time as string;
+    string userName = ViewBag.UserName ?? "Սեփական Գրանցումներ";
+    ViewData["Title"] = @userName;
 }
 
-<h1>Նոր Գրանցում</h1>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="UserId" value="@ViewBag.UserId" />
-            <div class="form-group">
-                <label asp-for="FirstName" class="control-label"></label>
-                <input asp-for="FirstName" class="form-control" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
-            </div>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label asp-for="PhoneNumber" class="control-label"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label asp-for="AppointmentDate" class="control-label"></label>
-                <input asp-for="AppointmentDate" class="form-control" type="date" value="@date?.ToString("yyyy-MM-dd")" />
-                <span asp-validation-for="AppointmentDate" class="text-danger"></span>
-            </div>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label asp-for="AppointmentHour" class="control-label"></label>
-                <select asp-for="AppointmentHour" class="form-control" asp-items="ViewBag.HourOptions">
-                    <option value="@time">@time</option>
-                    <!-- Other options can be added here if necessary -->
-                </select>
-                <span asp-validation-for="AppointmentHour" class="text-danger"></span>
-            </div>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label asp-for="ServiceId" class="control-label">Ծառայություն</label>
-                <select asp-for="ServiceId" class="form-control" asp-items="ViewBag.ServiceId">
-                    <option value="">Ընտրել Ծառայությունը</option>
-                </select>
-                <span asp-validation-for="ServiceId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Duration" class="control-label">Ժամանակ</label>
-                <select asp-for="Duration" class="form-control">
-                    <option value="30">30 րոպե</option>
-                    <option value="60">1 ժամ</option>
-                    <option value="90">1 ժամ 30 րոպե</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<h2 style="color: #4a4a4a;">Նոր Գրանցում - @ViewBag.UserName</h2>
 
-<div>
-    <a asp-action="Index" asp-route-userId="@ViewBag.UserId" asp-route-selectedDate="@date?.ToString("yyyy-MM-dd")">Back to List</a>
-</div>
+<form asp-action="Create" asp-route-userId="@ViewBag.UserId">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="UserId" value="@ViewBag.UserId" />
+    <input type="hidden" asp-for="IsCreatedByAdmin" value="@ViewBag.IsCreatedByAdmin" />
+    <div class="form-group">
+        <label asp-for="FirstName" class="control-label"></label>
+        <input asp-for="FirstName" class="form-control" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="PhoneNumber" style="color: #ffffff;">Հեռախոսահամար</label>
+        <input asp-for="PhoneNumber" class="form-control bg-light-grey" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+    <div class="form-group date-picker-wrapper">
+        <label asp-for="AppointmentDate" style="color: #ffffff;">Գրանցման Օր</label>
+        <div class="date-picker-container">
+            <input id="appointment-date-display" class="form-control bg-light-grey clickable-field" type="text" readonly value="@(ViewBag.SelectedDate?.ToString("dd/MM/yyyy") ?? DateTime.Now.ToString("dd/MM/yyyy"))" />
+            <input asp-for="AppointmentDate" id="appointment-date-picker" type="hidden" value="@(ViewBag.SelectedDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" />
+        </div>
+        <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+    </div>
+    <div class="form-group" style="margin-bottom: 10px;">
+        <label asp-for="AppointmentHour" class="control-label" style="color: #ffffff;"></label>
+        <select asp-for="AppointmentHour" class="form-control bg-light-grey" asp-items="ViewBag.HourOptions">
+            <option value="@ViewBag.SelectedTime">@ViewBag.SelectedTime</option>
+        </select>
+        <span asp-validation-for="AppointmentHour" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="ServiceId" style="color: #ffffff;">Ծառայություն</label>
+        <div class="service-selection-container">
+            <input type="text" id="serviceSearch" class="form-control bg-light-grey" placeholder="Որոնել կամ մուտքագրել նոր ծառայություն" />
+            <div id="serviceList" class="service-list-container">
+                <!-- Ծառայությունների ցանկը կլցվի JavaScript-ով -->
+            </div>
+        </div>
+        <input type="hidden" asp-for="ServiceId" id="selectedServiceId" value="" />
+        <input type="hidden" asp-for="CustomServiceName" id="customServiceName" value="" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Duration" style="color: #ffffff;">Ժամանակ</label>
+        <select asp-for="Duration" class="form-control bg-light-grey">
+            <option value="30">30 րոպե</option>
+            <option value="60">1 ժամ</option>
+            <option value="90">1 ժամ 30 րոպե</option>
+        </select>
+    </div>
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary btn-lg">Պահպանել</button>
+    </div>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#appointment-date-display").datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: "-0:+1",
+                beforeShow: function (input, inst) {
+                    setTimeout(function () {
+                        inst.dpDiv.css({
+                            top: $(".date-picker-container").offset().top + $(".date-picker-container").outerHeight(),
+                            left: $(".date-picker-container").offset().left
+                        });
+                    }, 0);
+                },
+                onSelect: function (dateText, inst) {
+                    // Փոխակերպում ենք ընտրված ամսաթիվը սերվերի ֆորմատի
+                    var date = $(this).datepicker('getDate');
+                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
+                    $("#appointment-date-picker").val(formattedDate);
+                }
+            });
+
+            var urlParams = new URLSearchParams(window.location.search);
+            var date = urlParams.get('date');
+            var time = urlParams.get('time');
+
+            if (date) {
+                $("#appointment-date-display").datepicker("setDate", new Date(date));
+                $("#appointment-date-picker").val(date);
+            }
+
+            if (time) {
+                $("#AppointmentHour").val(time);
+            }
+
+
+            var serviceList = $("#serviceList");
+            var serviceSearch = $("#serviceSearch");
+            var selectedServiceId = $("#selectedServiceId");
+
+            // Ծառայությունների ցուցակի ցուցադրում/թաքցնում
+            serviceSearch.on("click", function () {
+                serviceList.toggle();
+            });
+
+            // Փակել ցուցակը, եթե սեղմվել է այլ տեղ
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest(".service-selection-container").length) {
+                    serviceList.hide();
+                }
+            });
+
+            // Ծառայությունների բեռնում
+            function loadServices() {
+                $.ajax({
+                    url: '@Url.Action("GetAllServices", "Appointments")',
+                    type: 'GET',
+                    success: function (services) {
+                        serviceList.empty();
+                        services.forEach(function (service) {
+                            serviceList.append('<div class="service-item" data-id="' + service.id + '">' + service.serviceName + '</div>');
+                        });
+                    }
+                });
+            }
+
+            // Ծառայության ընտրություն
+            serviceList.on("click", ".service-item", function () {
+                var selectedService = $(this);
+                serviceSearch.val(selectedService.text());
+                selectedServiceId.val(selectedService.data("id"));
+                serviceList.hide();
+            });
+
+            // Որոնում
+            serviceSearch.on("input", function () {
+                var searchTerm = $(this).val().toLowerCase();
+                $(".service-item").each(function () {
+                    var serviceName = $(this).text().toLowerCase();
+                    $(this).toggle(serviceName.indexOf(searchTerm) > -1);
+                });
+            });
+
+            // Ծառայությունների բեռնում էջի բացման ժամանակ
+            loadServices();
+
+            serviceSearch.on("blur", function () {
+                var searchValue = $(this).val().trim();
+                var matchedService = $(".service-item").filter(function () {
+                    return $(this).text().toLowerCase() === searchValue.toLowerCase();
+                });
+
+                if (matchedService.length) {
+                    selectedServiceId.val(matchedService.data("id"));
+                    $("#customServiceName").val("");
+                } else {
+                    selectedServiceId.val("");
+                    $("#customServiceName").val(searchValue);
+                }
+            });
+        });
+
+        // Եթե կա արդեն ընտրված ամսաթիվ, ցուցադրում ենք այն
+        var existingDate = $("#appointment-date-picker").val();
+        if (existingDate) {
+            var date = new Date(existingDate);
+            $("#appointment-date-display").datepicker("setDate", date);
+        }
+
+        // Ցուցադրել ընտրված ծառայությունը, եթե այն կա
+        var selectedServiceId = $("#selectedServiceId").val();
+        if (selectedServiceId) {
+            $.ajax({
+                url: '@Url.Action("GetAllServices", "Appointments")',
+                type: 'GET',
+                success: function (services) {
+                    var selectedService = services.find(s => s.id == selectedServiceId);
+                    if (selectedService) {
+                        $("#serviceSearch").val(selectedService.serviceName);
+                    }
+                }
+            });
+        }
+    </script>
 }
 
+<style>
+    body {
+        background-color: #f2f2f2;
+        color: #ffffff;
+    }
+
+    h2 {
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .btn-primary {
+        background-color: #4a4a4a;
+        border-color: #4a4a4a;
+        color: #ffffff;
+    }
+
+        .btn-primary:hover {
+            background-color: #666666;
+            border-color: #666666;
+        }
+
+    .btn-lg {
+        padding: 10px 40px;
+        font-size: 18px;
+    }
+
+    .form-control {
+        background-color: #cccccc;
+        color: #333333;
+    }
+
+        .form-control:focus {
+            box-shadow: none;
+        }
+
+    .text-danger {
+        color: #dc3545;
+    }
 
 
+    .clickable-field {
+        cursor: pointer;
+    }
 
+    .date-picker-container {
+        position: relative;
+    }
 
+        .date-picker-container::after {
+            content: "\1F4C5"; /* Calendar emoji */
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+         }
 
+    .service-selection-container {
+        position: relative;
+    }
+    .service-list-container {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 115px;
+        overflow-y: auto;
+        background-color: #333;
+        border: 1px solid #818181;
+        z-index: 1000;
+    }
 
+    .service-item {
+        padding: 10px;
+        cursor: pointer;
+    }
+
+        .service-item:hover {
+            background-color: #787878;
+        }
+</style> 

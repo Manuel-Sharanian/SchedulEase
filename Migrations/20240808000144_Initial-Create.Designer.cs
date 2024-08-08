@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BeautySalon.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240620022350_RemoveCascadeClientDeleting")]
-    partial class RemoveCascadeClientDeleting
+    [Migration("20240808000144_Initial-Create")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,18 +42,34 @@ namespace BeautySalon.Migrations
                     b.Property<int?>("ClientId")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("CustomPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CustomServiceName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCreatedByAdmin")
+                        .HasColumnType("bit");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ServiceId")
+                    b.Property<int?>("ServiceId")
                         .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -94,6 +110,28 @@ namespace BeautySalon.Migrations
                     b.ToTable("Clients");
                 });
 
+            modelBuilder.Entity("BeautySalon.Models.IncomeReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TotalEmployeeAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalEmployerAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IncomeReports");
+                });
+
             modelBuilder.Entity("BeautySalon.Models.Service", b =>
                 {
                     b.Property<int>("Id")
@@ -112,6 +150,54 @@ namespace BeautySalon.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Services");
+                });
+
+            modelBuilder.Entity("BeautySalon.Models.UserIncomeReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("EmployeeAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EmployerAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("IncomeReportId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncomeReportId");
+
+                    b.ToTable("UserIncomeReports");
+                });
+
+            modelBuilder.Entity("BeautySalon.Models.UserSavedReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserSavedReports");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -259,12 +345,10 @@ namespace BeautySalon.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -301,12 +385,10 @@ namespace BeautySalon.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -324,13 +406,22 @@ namespace BeautySalon.Migrations
 
                     b.HasOne("BeautySalon.Models.Service", "Service")
                         .WithMany("Appointments")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ServiceId");
 
                     b.Navigation("Client");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("BeautySalon.Models.UserIncomeReport", b =>
+                {
+                    b.HasOne("BeautySalon.Models.IncomeReport", "IncomeReport")
+                        .WithMany("UserReports")
+                        .HasForeignKey("IncomeReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IncomeReport");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -387,6 +478,11 @@ namespace BeautySalon.Migrations
             modelBuilder.Entity("BeautySalon.Models.Client", b =>
                 {
                     b.Navigation("Appointments");
+                });
+
+            modelBuilder.Entity("BeautySalon.Models.IncomeReport", b =>
+                {
+                    b.Navigation("UserReports");
                 });
 
             modelBuilder.Entity("BeautySalon.Models.Service", b =>

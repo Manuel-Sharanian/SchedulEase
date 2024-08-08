@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BeautySalon.Data;
 using BeautySalon.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BeautySalon.Controllers
 {
+    [Authorize]
     public class ServicesController : Controller
     {
         private readonly ApplicationDbContext _context;

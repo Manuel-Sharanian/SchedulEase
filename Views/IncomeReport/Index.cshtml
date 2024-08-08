@@ -1,0 +1,187 @@
+﻿@model IncomeReportViewModel
+
+<div class="container">
+    <h2 class="text-center page-title">Ընդհանուր Եկամտի հաշվետվություն</h2>
+     <div class="d-flex justify-content-between align-items-center">
+        <button id="prevDay" class="btn btn-outline-secondary">&lt;</button>
+        <div class="date-picker-container">
+            <input type="text" id="reportDate" class="form-control" style="max-width: 200px;" readonly>
+            <input type="hidden" id="reportDateHidden" value="@ViewBag.SelectedDate.ToString("yyyy-MM-dd")">
+        </div>
+        <button id="nextDay" class="btn btn-outline-secondary">&gt;</button>
+    </div> 
+    <div class="summary-container">
+        <h4 class="text-center mb-3">Ամսաթիվ: <span id="displayDate"></span></h4>
+        <div class="amount-box employer mb-3">
+            <p class="mb-1">Գործատուի մաս (Ընդհանուր)</p>
+            <h4 id="totalEmployerAmount">@Model.EmployerAmount.ToString("N2") ֏</h4>
+        </div>
+        <div class="amount-box employee">
+            <p class="mb-1">Աշխատողի մաս (Ընդհանուր)</p>
+            <h4 id="totalEmployeeAmount">@Model.EmployeeAmount.ToString("N2") ֏</h4>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script>
+        $(document).ready(function () {
+            let isCalendarOpen = false;
+
+            $("#reportDate").datepicker({
+                dateFormat: 'dd/mm/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: "-0:+1",
+                onSelect: function (dateText, inst) {
+                    var date = $(this).datepicker('getDate');
+                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
+                    $("#reportDateHidden").val(formattedDate);
+                    changeDate(formattedDate);
+                    isCalendarOpen = false;
+                }
+            });
+
+            $('.date-picker-container').on('click', function () {
+                if (isCalendarOpen) {
+                    $("#reportDate").datepicker("hide");
+                    isCalendarOpen = false;
+                } else {
+                    $("#reportDate").datepicker("show");
+                    isCalendarOpen = true;
+                }
+            });
+
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.date-picker-container, .ui-datepicker').length) {
+                    $("#reportDate").datepicker("hide");
+                    isCalendarOpen = false;
+                }
+            });
+
+            // Set initial date
+            var initialDate = $("#reportDateHidden").val();
+            if (initialDate) {
+                $("#reportDate").datepicker("setDate", new Date(initialDate));
+                updateDisplayDate(initialDate);
+            }
+
+            $("#prevDay").on("click", function () {
+                var selectedDate = $("#reportDate").datepicker('getDate');
+                selectedDate.setDate(selectedDate.getDate() - 1);
+                $("#reportDate").datepicker("setDate", selectedDate);
+                changeDate($.datepicker.formatDate('yy-mm-dd', selectedDate));
+            });
+
+            $("#nextDay").on("click", function () {
+                var selectedDate = $("#reportDate").datepicker('getDate');
+                selectedDate.setDate(selectedDate.getDate() + 1);
+                $("#reportDate").datepicker("setDate", selectedDate);
+                changeDate($.datepicker.formatDate('yy-mm-dd', selectedDate));
+            });
+
+            function changeDate(date) {
+                updateDailyTotals(date);
+                updateDisplayDate(date);
+            }
+
+            function updateDisplayDate(date) {
+                var displayDate = new Date(date);
+                $("#displayDate").text(displayDate.toLocaleDateString('en-GB'));
+            }
+
+            function updateDailyTotals(date) {
+                $.ajax({
+                    url: '/IncomeReport/GetDailyTotals',
+                    type: 'GET',
+                    data: { date: date },
+                    success: function (data) {
+                        if (data) {
+                            $('#totalEmployeeAmount').text((data.totalEmployeeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+                            $('#totalEmployerAmount').text((data.totalEmployerAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+                        } else {
+                            $('#totalEmployeeAmount').text('0.00 ֏');
+                            $('#totalEmployerAmount').text('0.00 ֏');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Սխալ տվյալները ստանալիս');
+                    }
+                });
+            }
+
+            // Initial update
+            updateDailyTotals(initialDate);
+        });
+    </script>
+}
+
+
+<style>
+    body {
+        background-color: #f0f0f0;
+        color: #333;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .page-title {
+        color: #4a4a4a;
+        margin-bottom: 20px;
+    }
+
+    .btn-outline-secondary {
+        color: #fff;
+        border-color: #4a4a4a;
+        background-color: #4a4a4a;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #333;
+            color: #fff;
+        }
+
+    .summary-container {
+        background-color: #e6e6e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+
+    .amount-box {
+        background-color: #d9d9d9;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .amount-title {
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    .amount-value {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .date-picker-container {
+        position: relative;
+        cursor: pointer;
+    }
+
+        .date-picker-container input[type="text"] {
+            background-color: #fff;
+            cursor: pointer;
+        }
+</style>

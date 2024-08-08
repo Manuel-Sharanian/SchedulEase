@@ -24,7 +24,6 @@ public class AdminController : Controller
     {
         var users = await _userManager.Users.ToListAsync();
         var userViewModels = new List<UserViewModel>();
-
         foreach (var user in users)
         {
             var roles = await _userManager.GetRolesAsync(user);
@@ -35,7 +34,6 @@ public class AdminController : Controller
                 Roles = roles.ToList()
             });
         }
-
         return View(userViewModels);
     }
 

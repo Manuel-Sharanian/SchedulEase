@@ -1,14 +1,13 @@
 ﻿@model IEnumerable<BeautySalon.Models.AppointmentViewModel>
 @{
-    ViewData["Title"] = "Գրանցումներ";
+    string userName = ViewBag.UserName ?? "Սեփական Գրանցումներ";
+    ViewData["Title"] = @userName;
     DateTime selectedDate = ViewBag.SelectedDate ?? DateTime.Today;
     bool isAdmin = ViewBag.IsAdmin ?? false;
     int appointmentCounter = 0;
-    string userName = ViewBag.UserName ?? "Սեփական Գրանցումներ";
 }
 
 <h1 class="text-center mb-4 page-title">Գրանցումներ - @userName</h1>
-
 
 <div class="container mt-4">
     <div class="row mb-4">
@@ -20,12 +19,11 @@
         <div class="col-md-6 text-right">
             <div class="d-flex align-items-center justify-content-end">
                 <a asp-action="Create" asp-route-userId="@ViewBag.TargetUserId" class="btn btn-new-appointment mr-2">Նոր Նշանակում</a>
-                <span id="liveTime" class="live-time ml-2"></span>
             </div>
         </div>
     </div>
 
-    <table class="table table-bordered table-hover">
+    <table class="table table-bordered">
         <thead class="thead-light">
             <tr>
                 <th>Ժամ</th>
@@ -37,7 +35,7 @@
             </tr>
         </thead>
         <tbody>
-            @for (int hour = 8; hour < 20; hour++)
+            @for (int hour = 6; hour < 20; hour++)
             {
                 for (int minute = 0; minute < 60; minute += 30)
                 {
@@ -48,7 +46,7 @@
                     a.Appointment.AppointmentHour.Add(TimeSpan.FromMinutes(a.Appointment.Duration)) > currentTime);
 
                     <tr>
-                        <td style="vertical-align: middle; background-color: #f2f2f2; cursor: pointer;">
+                        <td class="hour-cell" style="vertical-align: middle; background-color: #f2f2f2; cursor: pointer;">
                             @hour.ToString("00"):@minute.ToString("00")
                         </td>
                         @if (appointments.Any())
@@ -68,17 +66,40 @@
                                 @appointment.Appointment.PhoneNumber<br />
                             </td>
                             <td style="background-color: @backgroundColor;" rowspan="@rowspan">
-                                @appointment.Service.ServiceName<br />
+                                <div class="service-selection-container">
+                                    <input type="text" class="service-search form-control" data-id="@appointment.Appointment.Id"
+                                           value="@(appointment.Appointment.ServiceId.HasValue ? appointment.Service?.ServiceName : appointment.Appointment.CustomServiceName)"
+                                           placeholder="Որոնել կամ մուտքագրել ծառայությունը">
+                                    <div class="service-list-container" style="display: none;">
+                                        <!-- Ծառայությունների ցանկը կլցվի JavaScript-ով -->
+                                    </div>
+                                </div>
                             </td>
                             <td style="background-color: @backgroundColor;" rowspan="@rowspan">
-                                @(appointment.Appointment.CustomPrice != 0 ?
-                                    String.Format("{0:#,##0.00 ֏}", appointment.Appointment.CustomPrice) :
-                                    String.Format("{0:#,##0.00 ֏}", appointment.Service.Price))<br />
+                                @if (!appointment.Appointment.IsCompleted || ViewBag.IsAdmin)
+                                {
+                                    <span class="editable-amount" data-id="@appointment.Appointment.Id">
+                                        @(appointment.Appointment.CustomPrice.HasValue ?
+                                            String.Format("{0:#,##0.00 ֏}", appointment.Appointment.CustomPrice.Value) :
+                                            String.Format("{0:#,##0.00 ֏}", appointment.Service?.Price ?? 0))
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        @(appointment.Appointment.CustomPrice.HasValue ?
+                                            String.Format("{0:#,##0.00 ֏}", appointment.Appointment.CustomPrice.Value) :
+                                            String.Format("{0:#,##0.00 ֏}", appointment.Service?.Price ?? 0))
+                                    </span>
+                                }
                             </td>
                             <td style="background-color: @backgroundColor;" rowspan="@rowspan">
                                 <div class="btn-group" role="group" aria-label="Operations">
-                                    <a class="btn btn-info" asp-action="Edit" asp-route-id="@appointment.Appointment.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Ուղղել</a>
-                                    <a class="btn btn-danger" asp-action="Delete" asp-route-id="@appointment.Appointment.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Ջնջել</a>
+                                    @if (!appointment.Appointment.IsCompleted || isAdmin)
+                                    {
+                                        <a class="btn btn-info edit-btn" asp-action="Edit" asp-route-id="@appointment.Appointment.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Ուղղել</a>
+                                        <a class="btn btn-danger delete-btn" asp-action="Delete" asp-route-id="@appointment.Appointment.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Ջնջել</a>
+                                    }
                                     @if (appointment.Appointment.IsCompleted)
                                     {
                                         <span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Կատարված</span>
@@ -87,8 +108,8 @@
                                     {
                                         <a class="btn btn-success" id="markCompletedBtn_@appointment.Appointment.Id"
                                            style="text-decoration: none; margin-right: 5px;"
-                                           onclick="handleMarkCompletedClick(event, '@appointment.Appointment.Id', this)"
-                                           data-price="@(appointment.Appointment.CustomPrice != 0 ? appointment.Appointment.CustomPrice : appointment.Service.Price)">
+                                           onclick="handleMarkCompletedClick(event, '@appointment.Appointment.Id', this, @Json.Serialize(isAdmin))"
+                                           data-price="@(appointment.Appointment.CustomPrice != null ? appointment.Appointment.CustomPrice : appointment.Service.Price)">
                                             Նշել կատարված
                                         </a>
                                     }
@@ -97,7 +118,7 @@
                         }
                         else if (ongoingAppointment == null)
                         {
-                            <td colspan="5" style="background-color: #f2f2f2; cursor: pointer;" onclick="redirectToCreate('@selectedDate.ToString("yyyy-MM-dd")', '@hour.ToString("00"):@minute.ToString("00")')"></td>
+                            <td colspan="5" class="free-cell" style="background-color: #f2f2f2; cursor: pointer;" onclick="redirectToCreate('@selectedDate.ToString("yyyy-MM-dd")', '@hour.ToString("00"):@minute.ToString("00")')"></td>
                         }
                     </tr>
                 }
@@ -105,126 +126,204 @@
         </tbody>
     </table>
 
-    <div class="summary-container mt-4 p-3">
+    <div class="container-fluid mt-4">
         <div class="row">
-            <div class="col-md-6">
-                <h4>Ամսաթիվ: @ViewBag.SelectedDate.ToString("dd/MM/yyyy")</h4>
-            </div>
-            <div class="col-md-6 text-right">
-                <h4>Օրվա ընդհանուր գումար (Կատարված նշանակումներ) <span id="totalCompletedAmount">@ViewBag.TotalCompletedAmount.ToString("#,##0.00 ֏")</span></h4>
-                <h5>Կատարված նշանակումների քանակ` <span id="completedCount">@ViewBag.CompletedCount</span></h5>
-            </div>
-        </div>
-    </div>
-
-
-</div>
-
-
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="summary-container p-4">
-                <h4 class="text-center mb-4">Եկամտի բաշխում</h4>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5 class="text-center">Տոկոսային հարաբերություն</h5>
-                        <div class="d-flex justify-content-center mb-3">
-                            <input type="number" id="employerPercentage" class="form-control form-control-sm percentage-input mr-2" placeholder="Գործատու" value="">
-                            <input type="number" id="employeePercentage" class="form-control form-control-sm percentage-input" placeholder="Աշխատակից" value="">
-                        </div>
-                        <div class="text-center">
-                            <button class="btn btn-calculate" onclick="calculateSplitAmount()">Հաշվել</button>
-                        </div>
+            <div class="col-12">
+                <div class="summary-block">
+                    <div class="daily-summary-toggle" onclick="toggleDailySummary()">
+                        <h4 class="text-center mb-0">Օրվա ամփոփում</h4>
                     </div>
-                    <div class="col-md-6">
-                        <h5 class="text-center">Բաժանված գումարներ</h5>
-                        <div class="amount-box employer mb-3">
-                            <p class="mb-1">Գործատուի մաս</p>
-                            <h4 id="employerAmount">0.00 ֏</h4>
-                        </div>
-                        <div class="amount-box employee">
-                            <p class="mb-1">Աշխատողի մաս</p>
-                            <h4 id="employeeAmount">0.00 ֏</h4>
+                    <div class="daily-summary-content" style="display: none;">
+                        <div class="summary-container p-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>Ամսաթիվ: @ViewBag.SelectedDate.ToString("dd/MM/yyyy")</h4>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <h4>Օրվա ընդհանուր գումար (Կատարված նշանակումներ) <span id="totalCompletedAmount">@ViewBag.TotalCompletedAmount.ToString("#,##0.00 ֏")</span></h4>
+                                    <h5>Կատարված նշանակումների քանակ` <span id="completedCount">@ViewBag.CompletedCount</span></h5>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
+
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="summary-block">
+                <div class="income-distribution-toggle" onclick="toggleIncomeDistribution()">
+                    <h4 class="text-center mb-0">Եկամտի Բաշխում</h4>
+                </div>
+                <div class="income-distribution-content" style="display: none;">
+                    @if (ViewBag.IsAdmin)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-center">Տոկոսային հարաբերություն</h5>
+                                <div class="d-flex justify-content-center mb-3">
+                                    <input type="number" id="employerPercentage" class="form-control form-control-sm percentage-input mr-2" placeholder="Գործատու" value="">
+                                    <input type="number" id="employeePercentage" class="form-control form-control-sm percentage-input" placeholder="Աշխատակից" value="">
+                                </div>
+                                <div class="text-center mt-3">
+                                    <button id="saveIncomeDistribution" class="btn btn-save">Պահպանել</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-center">Բաժանված գումարներ</h5>
+                                <div class="amount-box employer mb-3">
+                                    <p class="mb-1">Գործատուի մաս</p>
+                                    <h4 id="employerAmount">0.00 ֏</h4>
+                                </div>
+                                <div class="amount-box employee">
+                                    <p class="mb-1">Աշխատողի մաս</p>
+                                    <h4 id="employeeAmount">0.00 ֏</h4>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row justify-content-center">
+                            <div class="col-md-4">
+                                <div class="amount-box employer mb-3">
+                                    <h5 class="text-center">Գործատուի մաս</h5>
+                                    <h4 id="employerAmount" class="text-center">0.00 ֏</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="amount-box employee">
+                                    <h5 class="text-center">Աշխատողի մաս</h5>
+                                    <h4 id="employeeAmount" class="text-center">0.00 ֏</h4>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 @if (ViewBag.IsAdmin)
 {
     <div class="text-right mt-4 mb-4">
-        <a asp-action="Index" asp-controller="Home" class="btn btn-back-to-list">Վերադառնալ օգտատերերի ցանկին</a>
+        <a asp-action="Index" asp-controller="Home" class="btn btn-back-to-list btn-lg">Վերադառնալ օգտատերերի ցանկին</a>
     </div>
 }
 
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     function redirectToCreate(date, time) {
         var userId = '@ViewBag.TargetUserId';
         window.location.href = '/Appointments/Create?userId=' + userId + '&date=' + date + '&time=' + time;
     }
 
-    // Function to handle date change
     function changeDate(date) {
         var userId = '@ViewBag.TargetUserId';
         window.location.href = '/Appointments/Index?userId=' + userId + '&selectedDate=' + date;
     }
 
-    // Ensure these variables are declared in the global scope so they can be updated dynamically
     var totalCompletedAmount = parseFloat('@ViewBag.TotalCompletedAmount'.replace(/,/g, ''));
     var completedCount = parseInt('@ViewBag.CompletedCount');
 
-    // Function to handle marking an appointment as completed
-    function handleMarkCompletedClick(event, appointmentId, element) {
-        event.stopPropagation(); // Կանխում է իրադարձության տարածումը
-        var price = $(element).data('price');
-        $.ajax({
-            url: '/Appointments/MarkCompleted/' + appointmentId,
-            type: 'POST',
-            success: function () {
-                var $btn = $('#markCompletedBtn_' + appointmentId);
-                var $row = $btn.closest('tr');
-                $row.find('td').css('background-color', 'yellow');
-                $btn.replaceWith('<span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">Կատարված</span>');
+    $(document).ready(function () {
+        $('.table tr').each(function (index) {
+            var $row = $(this);
+            var $appointmentCell = $row.find('td[rowspan]');
+            if ($appointmentCell.length > 0) {
+                var backgroundColor = $appointmentCell.css('background-color');
+                var rowspan = parseInt($appointmentCell.attr('rowspan'));
 
-                // Dynamically update the total completed amount and count
-                totalCompletedAmount += parseFloat(price);
-                completedCount += 1;
-                updateTotalCompletedAmount();
-            },
-            error: function (xhr, status, error) {
-                console.error('Error:', error);
-                alert('Սխալ տեղի ունեցավ նշանակումը որպես կատարված նշելիս:');
+                $row.find('td').css('background-color', backgroundColor);
+
+                for (var i = 1; i < rowspan; i++) {
+                    $row.next().find('td').css('background-color', backgroundColor);
+                    $row = $row.next();
+                }
             }
         });
-    }
 
-    // Function to update the displayed total completed amount and count
+        // Apply hover effect only for free cells
+        $('.free-cell').hover(
+            function () {
+                var $row = $(this).closest('tr');
+                $row.find('.hour-cell').addClass('hour-cell-hover');
+                $(this).css('background-color', '#e0e0e0');
+            },
+            function () {
+                var $row = $(this).closest('tr');
+                $row.find('.hour-cell').removeClass('hour-cell-hover');
+                $(this).css('background-color', '#f2f2f2');
+            }
+        );
+
+        $('tr:has(span:contains("Կատարված"))').each(function () {
+            var $row = $(this);
+            var rowspan = parseInt($row.find('td[rowspan]').attr('rowspan'));
+
+            $row.find('td').css('background-color', 'yellow');
+
+            for (var i = 1; i < rowspan; i++) {
+                $row.next().find('td').css('background-color', 'yellow');
+                $row = $row.next();
+            }
+        });
+    });
+
+        function handleMarkCompletedClick(event, appointmentId, element, isAdmin) {
+            event.stopPropagation();
+            var price = parseFloat($(element).data('price'));
+            $.ajax({
+                url: '/Appointments/MarkCompleted/' + appointmentId,
+                type: 'POST',
+                success: function () {
+                    var $btn = $('#markCompletedBtn_' + appointmentId);
+                    var $row = $btn.closest('tr');
+                    var rowspan = parseInt($row.find('td[rowspan]').attr('rowspan'));
+
+                    // Գտնում ենք բոլոր տողերը, որոնք պատկանում են այս նշանակմանը
+                    var $allRows = $row.add($row.nextAll().slice(0, rowspan - 1));
+
+                    $allRows.find('td').css('background-color', 'yellow');
+
+                    $btn.replaceWith('<span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">Կատարված</span>');
+
+                    if (!isAdmin) {
+                        $allRows.find('.delete-btn, .edit-btn').remove();
+                        $allRows.find('.editable-amount').each(function () {
+                            var $this = $(this);
+                            var currentAmount = $this.text();
+                            $this.replaceWith('<span>' + currentAmount + '</span>');
+                        });
+                        // Ավելացնենք հետևյալ կոդը ծառայության դաշտը անխմբագրելի դարձնելու համար
+                        $allRows.find('.service-search').prop('disabled', true).css('background-color', '#f8f9fa');
+                    }
+
+                    totalCompletedAmount += price;
+                    completedCount += 1;
+                    updateTotalCompletedAmount();
+                },
+                error: function (xhr, status, error) {
+                    alert('Սխալ տեղի ունեցավ նշանակումը որպես կատարված նշելիս:');
+                }
+            });
+        }
+
     function updateTotalCompletedAmount() {
         $('#totalCompletedAmount').text(totalCompletedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
         $('#completedCount').text(completedCount);
-        calculateSplitAmount();
     }
 
-    // Function to update live time display every second
-    function updateLiveTime() {
-        var now = new Date();
-        var hours = now.getHours().toString().padStart(2, '0');
-        var minutes = now.getMinutes().toString().padStart(2, '0');
-        var seconds = now.getSeconds().toString().padStart(2, '0');
-        document.getElementById("liveTime").innerText = hours + ":" + minutes + ":" + seconds;
-    }
-
-    // Initial call to update time on page load
-    updateLiveTime();
-
-    // Update time every second
-    setInterval(updateLiveTime, 1000);
-
-    // Function to handle prev and next day button clicks
     document.getElementById("prevDay").addEventListener("click", function () {
         var selectedDate = new Date(document.getElementById("appointmentDate").value);
         selectedDate.setDate(selectedDate.getDate() - 1);
@@ -237,54 +336,331 @@
         changeDate(selectedDate.toISOString().split('T')[0]);
     });
 
+    let calculatedEmployeeAmount = 0;
+    let calculatedEmployerAmount = 0;
+
+    function calculateSplitAmount() {
+        var totalAmount = parseFloat($('#totalCompletedAmount').text().replace(/[^\d.-]/g, ''));
+        var employerPercentage = parseFloat($('#employerPercentage').val()) || 0;
+        var employeePercentage = parseFloat($('#employeePercentage').val()) || 0;
+
+        if (employerPercentage + employeePercentage !== 100) {
+            $('#percentageError').text('Տոկոսների գումարը պետք է լինի 100%');
+            return;
+        } else {
+            $('#percentageError').text('');
+        }
+
+        employerPercentage = employerPercentage / 100;
+        employeePercentage = employeePercentage / 100;
+
+        calculatedEmployerAmount = totalAmount * employerPercentage;
+        calculatedEmployeeAmount = totalAmount * employeePercentage;
+
+        $('#employerAmount').text(calculatedEmployerAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+        $('#employeeAmount').text(calculatedEmployeeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+    }
+
     $(document).ready(function () {
         updateTotalCompletedAmount();
+
+        var employerPercentage = parseFloat($('#employerPercentage').val());
+        var employeePercentage = parseFloat($('#employeePercentage').val());
+
+        if (!isNaN(employerPercentage) && !isNaN(employeePercentage)) {
+            calculateSplitAmount();
+        }
+        $('#employerPercentage, #employeePercentage').on('input', function () {
+            calculateSplitAmount();
+        });
+        $('.btn-calculate').on('click', calculateSplitAmount);
+
+        $('#saveIncomeDistribution').on('click', function () {
+            checkZeroValueAppointments().then(function (response) {
+                if (response.hasZeroValueAppointments) {
+                    alert("Կան նշանակումներ, որոնք չունեն արժեք: Խնդրում ենք ստուգել բոլոր նշանակումները:");
+                } else {
+                    var selectedDate = $('#appointmentDate').val();
+                    var userId = '@ViewBag.TargetUserId';
+
+                    $.ajax({
+                        url: '/IncomeReport/SaveIncomeReport',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            Date: selectedDate,
+                            UserId: userId,
+                            EmployeeAmount: calculatedEmployeeAmount,
+                            EmployerAmount: calculatedEmployerAmount
+                        }),
+                        success: function (data) {
+                            alert('Եկամտի հաշվետվությունը հաջողությամբ պահպանվեց');
+                            updateDailyTotals(data);
+                        },
+                        error: function () {
+                            alert('Սխալ եկամտի հաշվետվությունը պահպանելիս');
+                        }
+                    });
+                }
+            });
+        });
+
+        var isAdmin = @Json.Serialize(isAdmin);
+        if (!isAdmin) {
+            $('tr').each(function () {
+                if ($(this).find('span:contains("Կատարված")').length > 0) {
+                    $(this).find('.edit-btn, .delete-btn').remove();
+                    $(this).find('.editable-amount').each(function () {
+                        var $this = $(this);
+                        var currentAmount = $this.text();
+                        $this.replaceWith('<span>' + currentAmount + '</span>');
+                    });
+                    // Ավելացնենք հետևյալ կոդը ծառայության դաշտը անխմբագրելի դարձնելու համար
+                    $(this).find('.service-search').prop('disabled', true).css('background-color', '#f8f9fa');
+                }
+            });
+        }
+
 
         $('tr').each(function () {
             if ($(this).find('span:contains("Կատարված")').length > 0) {
                 $(this).find('td').css('background-color', 'yellow');
             }
         });
-    });
 
-    function calculateSplitAmount() {
-        var totalAmount = parseFloat($('#totalCompletedAmount').text().replace(/[^\d.-]/g, ''));
-        var employerPercentage = parseFloat($('#employerPercentage').val()) / 100;
-        var employeePercentage = parseFloat($('#employeePercentage').val()) / 100;
 
-        if (employerPercentage + employeePercentage !== 1) {
-            // alert('Տոկոսների գումարը պետք է լինի 100%');
-            return;
+        function loadIncomeDistribution() {
+            var selectedDate = $('#appointmentDate').val();
+            var userId = '@ViewBag.TargetUserId';
+
+            $.ajax({
+                url: '/Appointments/GetIncomeDistribution',
+                type: 'GET',
+                data: { date: selectedDate, userId: userId },
+                success: function (data) {
+                    if (data) {
+                        $('#employerAmount').text(data.employerAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+                        $('#employeeAmount').text(data.employeeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+
+                        if ('@ViewBag.IsAdmin' === 'True') {
+                            $('#employerPercentage').val(data.employerPercentage);
+                            $('#employeePercentage').val(data.employeePercentage);
+                        }
+                    } else {
+                        $('#employerAmount').text('0.00 ֏');
+                        $('#employeeAmount').text('0.00 ֏');
+
+                        if ('@ViewBag.IsAdmin' === 'True') {
+                            $('#employerPercentage').val('');
+                            $('#employeePercentage').val('');
+                        }
+                    }
+                },
+                error: function () {
+                    alert('Սխալ եկամտի բաշխման տվյալները բեռնելիս');
+                }
+            });
         }
 
-        var employerAmount = totalAmount * employerPercentage;
-        var employeeAmount = totalAmount * employeePercentage;
+        loadIncomeDistribution();
 
-        $('#employerAmount').text(employerAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
-        $('#employeeAmount').text(employeeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+        $('#appointmentDate').on('change', function () {
+            loadIncomeDistribution();
+        });
+
+        $('.editable-amount').on('click', function () {
+            var $this = $(this);
+            var currentAmount = $this.text().replace(/[^\d.-]/g, '');
+            var appointmentId = $this.data('id');
+
+            var $input = $('<input type="text" />').val(currentAmount);
+            $this.html($input);
+
+            $input.focus();
+
+            $input.on('blur keypress', function (e) {
+                if (e.type === 'blur' || e.which === 13) {
+                    e.preventDefault();
+                    var newAmount = $(this).val();
+
+                    $.ajax({
+                        url: '/Appointments/UpdateAmount',
+                        method: 'POST',
+                        data: { id: appointmentId, amount: newAmount },
+                        success: function (response) {
+                            if (response.isCustomPrice) {
+                                $this.html(response.formattedAmount);
+                            } else {
+                                $this.html('0.00 ֏');
+                            }
+                        },
+                        error: function (xhr) {
+                            if (xhr.status === 400) {
+                                alert(xhr.responseText);
+                            } else {
+                                alert('Սխալ տեղի ունեցավ գումարը թարմացնելիս:');
+                            }
+                            $this.html(currentAmount + ' ֏');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Ծառայությունների բեռնում և ֆիլտրում
+        function loadAndFilterServices(container, searchTerm = '') {
+            $.ajax({
+                url: '@Url.Action("GetAllServices", "Appointments")',
+                type: 'GET',
+                success: function (services) {
+                    var serviceList = container.find('.service-list-container');
+                    serviceList.empty();
+                    services.filter(function (service) {
+                        return service.serviceName.toLowerCase().includes(searchTerm.toLowerCase());
+                    }).forEach(function (service) {
+                        serviceList.append('<div class="service-item" data-id="' + service.id + '">' + service.serviceName + '</div>');
+                    });
+                    serviceList.show();
+                }
+            });
+        }
+
+        // Ծառայության որոնման դաշտի իրադարձություններ
+        $('.service-search').on('click focus', function (e) {
+            e.stopPropagation();
+            var container = $(this).closest('.service-selection-container');
+            loadAndFilterServices(container, $(this).val());
+        });
+
+        $('.service-search').on('input', function () {
+            var container = $(this).closest('.service-selection-container');
+            var searchTerm = $(this).val();
+            loadAndFilterServices(container, searchTerm);
+        });
+
+        $(document).on('click', function (event) {
+            if (!$(event.target).closest('.service-selection-container').length) {
+                $('.service-list-container').hide();
+            }
+        });
+
+        // Ծառայության ընտրություն
+        $(document).on('click', '.service-item', function () {
+            var container = $(this).closest('.service-selection-container');
+            var input = container.find('.service-search');
+            var appointmentId = input.data('id');
+            var serviceId = $(this).data('id');
+            var serviceName = $(this).text();
+
+            input.val(serviceName);
+            container.find('.service-list-container').hide();
+
+            updateService(appointmentId, serviceId, serviceName);
+        });
+
+        // Ծառայության թարմացում
+        function updateService(appointmentId, serviceId, serviceName) {
+            var originalServiceName = $('[data-id="' + appointmentId + '"]').attr('data-original-name');
+
+            // Եթե ծառայության անունը չի փոխվել, ոչինչ չանել
+            if (serviceName === originalServiceName) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("UpdateService", "Appointments")',
+                type: 'POST',
+                data: { appointmentId: appointmentId, serviceId: serviceId, serviceName: serviceName },
+                success: function (response) {
+                    if (response.success) {
+                        var serviceInput = $('[data-id="' + appointmentId + '"]');
+                        serviceInput.val(serviceName);
+                        serviceInput.attr('data-original-name', serviceName);
+                        var priceCell = serviceInput.closest('tr').find('.editable-amount');
+                        priceCell.text(response.formattedPrice);
+                    } else {
+                        alert('Սխալ ծառայությունը թարմացնելիս: ' + response.errorMessage);
+                    }
+                },
+                error: function () {
+                    alert('Սխալ ծառայությունը թարմացնելիս');
+                }
+            });
+        }
+
+        $('.service-search').each(function () {
+            $(this).attr('data-original-name', $(this).val());
+        });
+
+        // Enter կոճակի միջոցով պահպանում
+        $('.service-search').on('keypress', function (e) {
+            if (e.which == 13) {
+                var input = $(this);
+                var appointmentId = input.data('id');
+                var serviceName = input.val();
+
+                updateService(appointmentId, null, serviceName);
+            }
+        });
+
+        // Դաշտից դուրս գալիս պահպանում
+        $('.service-search').on('blur', function () {
+            var input = $(this);
+            var appointmentId = input.data('id');
+            var serviceName = input.val();
+
+            updateService(appointmentId, null, serviceName);
+        });
+
+    });
+
+    function updateDailyTotals(data) {
+        $('#totalEmployeeAmount').text(data.totalEmployeeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+        $('#totalEmployerAmount').text(data.totalEmployerAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
     }
 
-    // Կանչեք այս ֆունկցիան էջի բեռնման ժամանակ
-    $(document).ready(function () {
-        calculateSplitAmount();
-    });
+
+    function toggleDailySummary() {
+        const content = document.querySelector('.daily-summary-content');
+        toggleContent(content);
+    }
+
+    function toggleIncomeDistribution() {
+        const content = document.querySelector('.income-distribution-content');
+        toggleContent(content);
+    }
+
+    function toggleContent(element) {
+        if (element.style.display === 'none' || element.style.display === '') {
+            element.style.display = 'block';
+            element.style.maxHeight = '0px';
+            setTimeout(() => {
+                element.style.maxHeight = element.scrollHeight + 'px';
+            }, 10);
+        } else {
+            element.style.maxHeight = '0px';
+            element.addEventListener('transitionend', function handler() {
+                element.style.display = 'none';
+                element.removeEventListener('transitionend', handler);
+            });
+        }
+    }
+
+    //Check NonZeroAppointmentValue
+    function checkZeroValueAppointments() {
+        var selectedDate = $('#appointmentDate').val();
+        var userId = '@ViewBag.TargetUserId';
+
+        return $.ajax({
+            url: '/Appointments/CheckZeroValueAppointments',
+            type: 'GET',
+            data: { date: selectedDate, userId: userId },
+            dataType: 'json'
+        });
+    }
 </script>
 
-
-
-
-
 <style>
-    .live-time {
-        font-size: 1rem;
-        font-weight: bold;
-        padding: 0.35rem 0.8rem;
-        margin-left: 20px;
-        display: inline-block;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        background-color: #f8f9fa;
-    }
 
     .completed-appointment {
         background-color: yellow;
@@ -308,7 +684,9 @@
     }
 
     .percentage-input {
-        width: 120px;
+        width: 150px;
+        font-size: 1.1rem;
+        padding: 8px;
     }
 
     .amount-box {
@@ -383,11 +761,24 @@
             background-color: #666666;
         }
 
-    .btn-back-to-list {
-        background-color: #232323;
+    .btn-save {
+        background-color: #4a4a4a;
         color: white;
         font-size: 1.1rem;
         padding: 10px 20px;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-save:hover {
+            background-color: #666666;
+            color: white;
+        }
+
+    .btn-back-to-list {
+        background-color: #232323;
+        color: white;
+        font-size: 1.2rem;
+        padding: 12px 24px;
         transition: background-color 0.3s ease;
     }
 
@@ -396,4 +787,74 @@
             color: white;
         }
 
+
+
+    .hour-cell {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .hour-cell-hover {
+        background-color: #e0e0e0 !important;
+    }
+
+
+    .daily-summary-toggle,
+    .income-distribution-toggle {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        padding: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-bottom: 10px;
+    }
+
+        .daily-summary-toggle:hover,
+        .income-distribution-toggle:hover {
+            background-color: #e9ecef;
+        }
+
+    .daily-summary-content,
+    .income-distribution-content {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-top: 10px;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        max-height: 0;
+    }
+
+    .summary-block {
+        max-width: 1250px; /* կամ ցանկացած այլ արժեք, որը համապատասխանում է ձեր դիզայնին */
+        margin: 0 auto 20px;
+    }
+
+    .service-selection-container {
+        position: relative;
+    }
+
+    .service-list-container {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        max-height: 95px;
+        overflow-y: auto;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-top: none;
+        z-index: 1000;
+    }
+
+    .service-item {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+        .service-item:hover {
+            background-color: #f0f0f0;
+        }
 </style>
