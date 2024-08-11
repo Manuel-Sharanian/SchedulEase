@@ -13,7 +13,9 @@
     <div class="row mb-4">
         <div class="col-md-6 d-flex align-items-center">
             <button id="prevDay" class="btn btn-outline-secondary mr-2">&lt;</button>
-            <input type="date" id="appointmentDate" class="form-control" value="@selectedDate.ToString("yyyy-MM-dd")" onchange="changeDate(this.value)">
+            <div class="date-input-wrapper flex-grow-1">
+                <input type="date" id="appointmentDate" class="form-control" value="@selectedDate.ToString("yyyy-MM-dd")" onchange="changeDate(this.value)">
+            </div>
             <button id="nextDay" class="btn btn-outline-secondary ml-2">&gt;</button>
         </div>
         <div class="col-md-6 text-right">
@@ -278,46 +280,76 @@
                 $row = $row.next();
             }
         });
+
+
+        let isCalendarOpen = false;
+
+        $('.date-input-wrapper').on('mousedown', function (e) {
+            e.preventDefault(); // Կանխում ենք սովորական mousedown վարքագիծը
+
+            const dateInput = $(this).find('input[type="date"]')[0];
+
+            if (!isCalendarOpen) {
+                dateInput.showPicker();
+                isCalendarOpen = true;
+            } else {
+                dateInput.blur();
+                isCalendarOpen = false;
+            }
+        });
+
+        // Փակել օրացույցը, եթե սեղմվում է էջի այլ մասում
+        $(document).on('mousedown', function (e) {
+            if (!$(e.target).closest('.date-input-wrapper').length) {
+                $('#appointmentDate')[0].blur();
+                isCalendarOpen = false;
+            }
+        });
+
+        // Թարմացնել isCalendarOpen փոփոխականը, երբ օրացույցը փակվում է
+        $('#appointmentDate').on('blur', function () {
+            isCalendarOpen = false;
+        });
     });
 
-        function handleMarkCompletedClick(event, appointmentId, element, isAdmin) {
-            event.stopPropagation();
-            var price = parseFloat($(element).data('price'));
-            $.ajax({
-                url: '/Appointments/MarkCompleted/' + appointmentId,
-                type: 'POST',
-                success: function () {
-                    var $btn = $('#markCompletedBtn_' + appointmentId);
-                    var $row = $btn.closest('tr');
-                    var rowspan = parseInt($row.find('td[rowspan]').attr('rowspan'));
+    function handleMarkCompletedClick(event, appointmentId, element, isAdmin) {
+        event.stopPropagation();
+        var price = parseFloat($(element).data('price'));
+        $.ajax({
+            url: '/Appointments/MarkCompleted/' + appointmentId,
+            type: 'POST',
+            success: function () {
+                var $btn = $('#markCompletedBtn_' + appointmentId);
+                var $row = $btn.closest('tr');
+                var rowspan = parseInt($row.find('td[rowspan]').attr('rowspan'));
 
-                    // Գտնում ենք բոլոր տողերը, որոնք պատկանում են այս նշանակմանը
-                    var $allRows = $row.add($row.nextAll().slice(0, rowspan - 1));
+                // Գտնում ենք բոլոր տողերը, որոնք պատկանում են այս նշանակմանը
+                var $allRows = $row.add($row.nextAll().slice(0, rowspan - 1));
 
-                    $allRows.find('td').css('background-color', 'yellow');
+                $allRows.find('td').css('background-color', 'yellow');
 
-                    $btn.replaceWith('<span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">Կատարված</span>');
+                $btn.replaceWith('<span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">Կատարված</span>');
 
-                    if (!isAdmin) {
-                        $allRows.find('.delete-btn, .edit-btn').remove();
-                        $allRows.find('.editable-amount').each(function () {
-                            var $this = $(this);
-                            var currentAmount = $this.text();
-                            $this.replaceWith('<span>' + currentAmount + '</span>');
-                        });
-                        // Ավելացնենք հետևյալ կոդը ծառայության դաշտը անխմբագրելի դարձնելու համար
-                        $allRows.find('.service-search').prop('disabled', true).css('background-color', '#f8f9fa');
-                    }
-
-                    totalCompletedAmount += price;
-                    completedCount += 1;
-                    updateTotalCompletedAmount();
-                },
-                error: function (xhr, status, error) {
-                    alert('Սխալ տեղի ունեցավ նշանակումը որպես կատարված նշելիս:');
+                if (!isAdmin) {
+                    $allRows.find('.delete-btn, .edit-btn').remove();
+                    $allRows.find('.editable-amount').each(function () {
+                        var $this = $(this);
+                        var currentAmount = $this.text();
+                        $this.replaceWith('<span>' + currentAmount + '</span>');
+                    });
+                    // Ավելացնենք հետևյալ կոդը ծառայության դաշտը անխմբագրելի դարձնելու համար
+                    $allRows.find('.service-search').prop('disabled', true).css('background-color', '#f8f9fa');
                 }
-            });
-        }
+
+                totalCompletedAmount += price;
+                completedCount += 1;
+                updateTotalCompletedAmount();
+            },
+            error: function (xhr, status, error) {
+                alert('Սխալ տեղի ունեցավ նշանակումը որպես կատարված նշելիս:');
+            }
+        });
+    }
 
     function updateTotalCompletedAmount() {
         $('#totalCompletedAmount').text(totalCompletedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
@@ -857,4 +889,36 @@
         .service-item:hover {
             background-color: #f0f0f0;
         }
+
+
+    .date-input-wrapper {
+        position: relative;
+        cursor: pointer;
+        flex-grow: 1;
+        margin: 0 10px;
+        user-select: none;
+    }
+
+        .date-input-wrapper input[type="date"] {
+            width: 100%;
+            pointer-events: none;
+        }
+
+            .date-input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+                display: none;
+            }
+
+    #appointmentDate {
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        border: 1px solid #ced4da;
+        background-color: white;
+    }
+
+        #appointmentDate:focus {
+            outline: none;
+            box-shadow: none;
+            border-color: #ced4da;
 </style>

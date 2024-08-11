@@ -1,55 +1,133 @@
+﻿/* General Styles */
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+    font-family: Arial, sans-serif;
+}
+
 @media (min-width: 768px) {
     html {
         font-size: 16px;
     }
 }
 
-html {
-    font-size: 14px;
-    position: relative;
-    min-height: auto;
-    font-family: Arial, sans-serif;
-}
-
-header nav {
-    background-image: url('/images/OIPPP.jpeg');
-    background-color: #f0f0f0;
-    border-radius: 10px;
-    border: none;
-}
-
-
 body {
     background-image: url('/images/LightGrey.jpg');
     background-repeat: no-repeat;
     background-position: center top;
     background-attachment: fixed;
-    background-size: 100% auto;
+    background-size: cover;
     margin-bottom: 100px;
     padding: 20px;
 }
 
+header nav {
+    background-image: url('/images/OIPPP.jpeg');
+    background-color: #f0f0f0;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    border-radius: 10px;
+    border: none;
+    width: 100%; /* Ensure navbar occupies full width */
+}
 
- Below is the code for scrollbar!!! 
+/* Media Query for Small Screens (Max Width: 767px) */
+@media (max-width: 767px) {
+    body {
+        padding: 10px;
+    }
 
+    header nav {
+        border-radius: 5px;
+    }
+}
 
+/* New Media Query for 570px to 670px Range */
+@media (min-width: 570px) and (max-width: 670px) {
+    .navbar-brand {
+        font-size: 20px; /* Reduce font size for the brand */
+        width: auto; /* Allow it to take up more space if needed */
+    }
 
- width 
+    .navbar-nav .nav-link {
+        font-size: 14px; /* Adjust link font size */
+        padding: 5px 10px; /* Adjust padding for better fit */
+    }
+
+    .navbar-collapse {
+        flex-direction: column; /* Stack links vertically if needed */
+        align-items: flex-start;
+    }
+}
+
+/* Scrollbar styles */
 ::-webkit-scrollbar {
     width: 10px;
 }
 
- Track 
 ::-webkit-scrollbar-track {
     background: #f1f1f1;
 }
 
- Handle 
 ::-webkit-scrollbar-thumb {
     background: #888;
 }
 
-     Handle on hover 
     ::-webkit-scrollbar-thumb:hover {
         background: #555;
+    }
+
+
+/* Navbar Toggler Styles */
+.navbar-toggler {
+    border: none;
+    background: transparent !important;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    transition: .5s ease-in-out;
+}
+
+    .navbar-toggler:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .navbar-toggler .icon-bar {
+        width: 30px;
+        height: 3px;
+        background-color: #333;
+        position: absolute;
+        left: 5px;
+        transition: .25s ease-in-out;
+    }
+
+        .navbar-toggler .icon-bar:nth-child(1) {
+            top: 10px;
+        }
+
+        .navbar-toggler .icon-bar:nth-child(2) {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .navbar-toggler .icon-bar:nth-child(3) {
+            bottom: 10px;
+        }
+
+    .navbar-toggler.is-active .icon-bar:nth-child(1) {
+        top: 50%;
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .navbar-toggler.is-active .icon-bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .navbar-toggler.is-active .icon-bar:nth-child(3) {
+        bottom: 50%;
+        transform: translateY(50%) rotate(-45deg);
     }

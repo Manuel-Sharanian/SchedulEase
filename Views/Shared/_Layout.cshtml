@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BeautySalon.styles.css" asp-append-version="true" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         .navbar-brand, .navbar-nav .nav-link {
             font-weight: 600;
@@ -36,7 +36,9 @@
                 <a class="navbar-brand" asp-controller="Home" asp-action="Index">MK</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
@@ -75,6 +77,29 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function () {
+            var $navbarToggler = $('.navbar-toggler');
+            var $navbarCollapse = $('.navbar-collapse');
+
+            function toggleMenu() {
+                var isExpanded = $navbarCollapse.hasClass('show');
+                $navbarCollapse.collapse(isExpanded ? 'hide' : 'show');
+                $navbarToggler.toggleClass('is-active');
+                $navbarToggler.attr('aria-expanded', !isExpanded);
+            }
+
+            $navbarToggler.on('click', function (e) {
+                e.preventDefault();
+                toggleMenu();
+            });
+
+            // Սկզբնական վիճակի սահմանում
+            $navbarToggler.removeClass('is-active');
+            $navbarToggler.attr('aria-expanded', 'false');
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html> 
