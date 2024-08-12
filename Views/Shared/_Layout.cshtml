@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] </title>
+    <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BeautySalon.styles.css" asp-append-version="true" />
@@ -31,7 +31,7 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3 fixed-top-custom">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-controller="Home" asp-action="Index">MK</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -60,10 +60,7 @@
                                 <a class="nav-link" asp-controller="Admin" asp-action="index">Օգտատերեր</a>
                             </li>
                         }
-@*                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">Գաղտնիություն</a>
-                        </li> *@
-                     </ul>
+                    </ul>
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -94,12 +91,28 @@
                 toggleMenu();
             });
 
-            // Սկզբնական վիճակի սահմանում
             $navbarToggler.removeClass('is-active');
             $navbarToggler.attr('aria-expanded', 'false');
         });
+        let lastScrollTop = 0;
+        const navbar = document.querySelector('.navbar');
+        const navbarHeight = navbar.offsetHeight;
+
+        window.addEventListener('scroll', function () {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop) {
+                // Scroll Down
+                navbar.style.top = `-${navbarHeight}px`;
+            } else {
+                // Scroll Up
+                navbar.style.top = '20px';
+            }
+
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }, false);
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html> 
+</html>

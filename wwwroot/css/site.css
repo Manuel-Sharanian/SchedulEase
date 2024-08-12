@@ -20,6 +20,7 @@ body {
     background-size: cover;
     margin-bottom: 100px;
     padding: 20px;
+    padding-top: 100px;
 }
 
 header nav {
@@ -30,8 +31,20 @@ header nav {
     background-position: center;
     border-radius: 10px;
     border: none;
-    width: 100%; /* Ensure navbar occupies full width */
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
 }
+
+.fixed-top-custom {
+    position: fixed;
+    top: 20px;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    transition: top 0.3s ease-in-out;
+}
+
 
 /* Media Query for Small Screens (Max Width: 767px) */
 @media (max-width: 767px) {
@@ -47,17 +60,17 @@ header nav {
 /* New Media Query for 570px to 670px Range */
 @media (min-width: 570px) and (max-width: 670px) {
     .navbar-brand {
-        font-size: 20px; /* Reduce font size for the brand */
-        width: auto; /* Allow it to take up more space if needed */
+        font-size: 20px;
+        width: auto;
     }
 
     .navbar-nav .nav-link {
-        font-size: 14px; /* Adjust link font size */
-        padding: 5px 10px; /* Adjust padding for better fit */
+        font-size: 14px;
+        padding: 5px 10px;
     }
 
     .navbar-collapse {
-        flex-direction: column; /* Stack links vertically if needed */
+        flex-direction: column;
         align-items: flex-start;
     }
 }
@@ -78,7 +91,6 @@ header nav {
     ::-webkit-scrollbar-thumb:hover {
         background: #555;
     }
-
 
 /* Navbar Toggler Styles */
 .navbar-toggler {
