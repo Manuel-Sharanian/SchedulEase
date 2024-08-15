@@ -12,6 +12,20 @@ html {
     }
 }
 
+/* Լոգոյի դիրքավորում */
+.navbar-brand-container {
+    margin-left: 30px; /* Հեռացնում է լոգոն ձախ եզրից */
+}
+
+/* Համբուրգեր նշանի դիրքավորում */
+.navbar-toggler-container {
+    margin-right: 20px; /* Հեռացնում է համբուրգեր նշանը աջ եզրից */
+    display: flex;
+    align-items: center; /* Ուղղահայաց կենտրոնացում */
+    height: 100%; /* Ապահովում է container-ի ամբողջ բարձրությունը */
+}
+
+
 body {
     background-image: url('/images/LightGrey.jpg');
     background-repeat: no-repeat;
@@ -53,7 +67,7 @@ header nav {
     }
 
     header nav {
-        border-radius: 5px;
+        border-radius: 20px;
     }
 }
 
@@ -70,6 +84,7 @@ header nav {
     }
 
     .navbar-collapse {
+        justify-content: flex-start;
         flex-direction: column;
         align-items: flex-start;
     }
@@ -130,36 +145,36 @@ header nav {
             bottom: 10px;
         }
 
-    .navbar-brand, .navbar-nav .nav-link {
-        font-weight: 600;
-        color: #333 !important;
-        transition: color 0.3s, transform 0.3s;
+.navbar-brand, .navbar-nav .nav-link {
+    font-weight: 600;
+    color: #333 !important;
+    transition: color 0.3s, transform 0.3s;
+}
+
+.navbar-brand {
+    font-size: 24px;
+    width: 120px;
+    text-align: center;
+}
+
+    .navbar-brand:hover, .navbar-nav .nav-link:hover {
+        color: #818181 !important;
+        transform: translateY(-2px);
     }
 
-    .navbar-brand {
-        font-size: 24px;
-        width: 120px;
-        text-align: center;
-    }
+.navbar-toggler.is-active .icon-bar:nth-child(1) {
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+}
 
-        .navbar-brand:hover, .navbar-nav .nav-link:hover {
-            color: #818181 !important;
-            transform: translateY(-2px);
-        }
+.navbar-toggler.is-active .icon-bar:nth-child(2) {
+    opacity: 0;
+}
 
-    .navbar-toggler.is-active .icon-bar:nth-child(1) {
-        top: 50%;
-        transform: translateY(-50%) rotate(45deg);
-    }
-
-    .navbar-toggler.is-active .icon-bar:nth-child(2) {
-        opacity: 0;
-    }
-
-    .navbar-toggler.is-active .icon-bar:nth-child(3) {
-        bottom: 50%;
-        transform: translateY(50%) rotate(-45deg);
-    }
+.navbar-toggler.is-active .icon-bar:nth-child(3) {
+    bottom: 50%;
+    transform: translateY(50%) rotate(-45deg);
+}
 
 /* Ցանկի տարրերը մեջտեղում տեղադրելու համար */
 @media (max-width: 767px) {
@@ -196,7 +211,7 @@ header nav {
         bottom: 0;
         left: 50%;
         background-color: #333;
-        transition: all 0.3s ease;
+        transition: all 0.5s ease;
     }
 
     .navbar-nav .nav-link:hover::after,
