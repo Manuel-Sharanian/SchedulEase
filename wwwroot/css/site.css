@@ -49,7 +49,7 @@ header nav {
 /* Media Query for Small Screens (Max Width: 767px) */
 @media (max-width: 767px) {
     body {
-        padding: 10px;
+        padding-top: 120px; /* Ավելի մեծ padding հեռախոսների համար */
     }
 
     header nav {
@@ -130,6 +130,23 @@ header nav {
             bottom: 10px;
         }
 
+    .navbar-brand, .navbar-nav .nav-link {
+        font-weight: 600;
+        color: #333 !important;
+        transition: color 0.3s, transform 0.3s;
+    }
+
+    .navbar-brand {
+        font-size: 24px;
+        width: 120px;
+        text-align: center;
+    }
+
+        .navbar-brand:hover, .navbar-nav .nav-link:hover {
+            color: #818181 !important;
+            transform: translateY(-2px);
+        }
+
     .navbar-toggler.is-active .icon-bar:nth-child(1) {
         top: 50%;
         transform: translateY(-50%) rotate(45deg);
@@ -143,3 +160,134 @@ header nav {
         bottom: 50%;
         transform: translateY(50%) rotate(-45deg);
     }
+
+/* Ցանկի տարրերը մեջտեղում տեղադրելու համար */
+@media (max-width: 767px) {
+    .navbar-nav {
+        text-align: center;
+    }
+
+        .navbar-nav .nav-item {
+            display: block;
+            width: 100%;
+        }
+}
+
+/* Ընդհանուր ոճեր նավիգացիայի հղումների համար */
+.navbar-nav .nav-link,
+.navbar-nav .dropdown-toggle,
+.dropdown-item {
+    position: relative;
+    font-weight: 600;
+    color: #333 !important;
+    transition: color 0.3s ease;
+    padding: 0.5rem 1rem;
+    background-color: transparent !important;
+}
+
+    /* Hover էֆեկտ */
+    .navbar-nav .nav-link::after,
+    .navbar-nav .dropdown-toggle::after,
+    .dropdown-item::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 50%;
+        background-color: #333;
+        transition: all 0.3s ease;
+    }
+
+    .navbar-nav .nav-link:hover::after,
+    .navbar-nav .dropdown-toggle:hover::after,
+    .dropdown-item:hover::after {
+        width: 100%;
+        left: 0;
+    }
+
+    /* Հատուկ ոճեր դրոպդաունի համար */
+    .navbar-nav .dropdown-toggle::after {
+        bottom: -2px;
+    }
+
+.dropdown-menu {
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+    background-color: transparent !important;
+    text-align: center;
+}
+
+/* Վերացնում ենք Bootstrap-ի դրոպդաունի սլաքը */
+.navbar-nav .dropdown-toggle::after {
+    display: none;
+}
+
+/* Մոբայլ տարբերակի ոճեր */
+@media (max-width: 767px) {
+    .navbar-nav {
+        text-align: center;
+    }
+
+        .navbar-nav .nav-item,
+        .dropdown-menu,
+        .dropdown-item {
+            width: 100%;
+        }
+
+    .dropdown-menu {
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .dropdown-item:hover {
+        background-color: transparent;
+    }
+
+    .form-inline {
+        justify-content: center;
+    }
+}
+
+/* Կոճակի ոճեր */
+.dropdown-item[type="submit"] {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+}
+
+
+/* Դրոպդաունի սլաքի ոճեր */
+.dropdown-arrow {
+    display: inline-block;
+    font-size: 0.8em;
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+}
+
+.nav-item.dropdown:hover .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Դրոպդաունի մենյուի ոճեր */
+.dropdown-menu {
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+}
+
+.nav-item.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}

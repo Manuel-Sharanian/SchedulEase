@@ -120,14 +120,20 @@ namespace BeautySalon.Controllers
         [HttpGet]
         public async Task<IActionResult> CheckZeroValueAppointments(DateTime date, string userId)
         {
+
+            if (date == default(DateTime) || string.IsNullOrEmpty(userId))
+            {
+                return BadRequest("Invalid input parameters");
+            }
+
             var appointments = await _context.Appointments
                 .Include(a => a.Service)
-                .Where(a => a.AppointmentDate.Date == date.Date && a.UserId == userId)
+                .Where(a => a.AppointmentDate.Date == date.Date && a.UserId == userId && a.IsCompleted)
                 .ToListAsync();
 
             bool hasZeroValueAppointments = appointments.Any(a =>
-                (a.CustomPrice.HasValue && a.CustomPrice.Value == 0) &&
-                (a.Service == null || a.Service.Price == 0));
+                (a.CustomPrice.HasValue && a.CustomPrice.Value == 0) ||
+                (!a.CustomPrice.HasValue && (a.Service == null || a.Service.Price == 0)));
 
             return Json(new { hasZeroValueAppointments });
         }

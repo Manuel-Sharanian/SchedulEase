@@ -129,7 +129,7 @@ namespace BeautySalon.Areas.Identity.Pages.Account
                         return RedirectToPage("./Lockout");
                     }
                 }
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                ModelState.AddModelError(string.Empty, "Սխալ Էլ.Փոստ կամ գաղտնաբառ.");
             }
 
             // If we got this far, something failed, redisplay form

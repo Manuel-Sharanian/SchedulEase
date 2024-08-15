@@ -10,38 +10,27 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
-    <style>
-        .navbar-brand, .navbar-nav .nav-link {
-            font-weight: 600;
-            color: #333 !important;
-            transition: color 0.3s, transform 0.3s;
-        }
-
-        .navbar-brand {
-            font-size: 24px;
-            width: 120px;
-            text-align: center;
-        }
-
-            .navbar-brand:hover, .navbar-nav .nav-link:hover {
-                color: #818181 !important;
-                transform: translateY(-2px);
-            }
-    </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3 fixed-top-custom">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">MK</a>
+                <!-- Logo on the left -->
+                <div class="navbar-brand-container">
+                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">MK</a>
+                </div>
+
+                <!-- Navbar toggler for mobile view -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+
+                <!-- Navbar links on the right -->
+                <div class="collapse navbar-collapse justify-content-end">
+                    <ul class="navbar-nav">
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
@@ -65,6 +54,7 @@
                 </div>
             </div>
         </nav>
+
     </header>
     <div class="container">
         <main role="main" class="pb-3">
@@ -91,9 +81,20 @@
                 toggleMenu();
             });
 
+            // Փակել մենյուն էջի այլ մասում սեղմելիս
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.navbar').length) {
+                    $navbarCollapse.collapse('hide');
+                    $navbarToggler.removeClass('is-active');
+                    $navbarToggler.attr('aria-expanded', 'false');
+                }
+            });
+
             $navbarToggler.removeClass('is-active');
             $navbarToggler.attr('aria-expanded', 'false');
         });
+
+
         let lastScrollTop = 0;
         const navbar = document.querySelector('.navbar');
         const navbarHeight = navbar.offsetHeight;
@@ -111,6 +112,28 @@
 
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         }, false);
+
+        // նավբարի "Բարև User!" մաս.
+        document.addEventListener('DOMContentLoaded', function () {
+            var dropdowns = document.querySelectorAll('.nav-item.dropdown');
+
+            dropdowns.forEach(function (dropdown) {
+                dropdown.addEventListener('mouseenter', function () {
+                    this.querySelector('.dropdown-menu').style.display = 'block';
+                    setTimeout(() => {
+                        this.querySelector('.dropdown-menu').style.opacity = '1';
+                    }, 10);
+                });
+
+                dropdown.addEventListener('mouseleave', function () {
+                    var dropdownMenu = this.querySelector('.dropdown-menu');
+                    dropdownMenu.style.opacity = '0';
+                    setTimeout(() => {
+                        dropdownMenu.style.display = 'none';
+                    }, 300);
+                });
+            });
+        });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
