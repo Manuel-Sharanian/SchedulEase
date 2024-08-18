@@ -1,10 +1,11 @@
 ﻿using BeautySalon.Data;
 using BeautySalon.Middleware;
+using BeautySalon.Models;
+using BeautySalon.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
 
 namespace BeautySalon
 {
@@ -20,6 +21,7 @@ namespace BeautySalon
                 options.UseSqlServer(connectionString));
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+            builder.Services.AddTransient<IEmailService, EmailService>();
             builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = true;
@@ -99,6 +101,7 @@ namespace BeautySalon
 
             app.Run();
         }
+
 
         private static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider, IConfiguration configuration, ILogger logger)
         {

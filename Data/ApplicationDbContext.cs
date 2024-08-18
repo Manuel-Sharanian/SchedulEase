@@ -22,6 +22,7 @@ namespace BeautySalon.Data
         public DbSet<UserSavedReport> UserSavedReports { get; set; }
         public DbSet<IncomeReport> IncomeReports { get; set; }
         public DbSet<UserIncomeReport> UserIncomeReports { get; set; }
+        public DbSet<PendingRegistration> PendingRegistrations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

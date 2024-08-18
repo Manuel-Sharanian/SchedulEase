@@ -7,6 +7,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using BeautySalon.Services;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,16 +21,16 @@ namespace BeautySalon.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
 
         public EmailModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            IEmailSender emailSender)
+            IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -123,16 +125,16 @@ namespace BeautySalon.Areas.Identity.Pages.Account.Manage
                     pageHandler: null,
                     values: new { area = "Identity", userId = userId, email = Input.NewEmail, code = code },
                     protocol: Request.Scheme);
-                await _emailSender.SendEmailAsync(
-                    Input.NewEmail,
-                    "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-                StatusMessage = "Confirmation link to change email sent. Please check your email.";
+                await _emailService.SendChangeEmailConfirmationAsync(
+                    Input.NewEmail,
+                    HtmlEncoder.Default.Encode(callbackUrl));
+
+                StatusMessage = "Էլ․ փոստի փոփոխման հաստատման հղումը ուղարկված է: Խնդրում ենք ստուգել ձեր էլ. փոստը:";
                 return RedirectToPage();
             }
 
-            StatusMessage = "Your email is unchanged.";
+            StatusMessage = "Ձեր էլ. փոստի հասցեն չի փոխվել:";
             return RedirectToPage();
         }
 
@@ -159,12 +161,10 @@ namespace BeautySalon.Areas.Identity.Pages.Account.Manage
                 pageHandler: null,
                 values: new { area = "Identity", userId = userId, code = code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-            StatusMessage = "Verification email sent. Please check your email.";
+            await _emailService.SendEmailConfirmationAsync(email, HtmlEncoder.Default.Encode(callbackUrl));
+
+            StatusMessage = "Հաստատման էլ. նամակը ուղարկված է: Խնդրում ենք ստուգել ձեր էլ. փոստը:";
             return RedirectToPage();
         }
     }

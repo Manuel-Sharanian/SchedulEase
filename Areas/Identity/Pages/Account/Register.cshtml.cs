@@ -1,6 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +8,9 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-
+using BeautySalon.Data;
+using BeautySalon.Models;
+using BeautySalon.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -18,36 +18,46 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
+
+
 
 namespace BeautySalon.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
+        private readonly ApplicationDbContext _context;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IUserStore<IdentityUser> _userStore;
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
+        private readonly IPasswordHasher<IdentityUser> _passwordHasher;
 
         private readonly RoleManager<IdentityRole> _roleManager;
 
         public RegisterModel(
+            ApplicationDbContext context,
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender,
-            RoleManager<IdentityRole> roleManager)
+            IEmailService emailService,
+            RoleManager<IdentityRole> roleManager,
+            IPasswordHasher<IdentityUser> passwordHasher)
         {
+            _context = context;
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
-            _emailSender = emailSender;
+            _emailService = emailService;
             _roleManager = roleManager;
+            _passwordHasher = passwordHasher;
         }
 
         /// <summary>
@@ -94,7 +104,7 @@ namespace BeautySalon.Areas.Identity.Pages.Account
 
             [DataType(DataType.Password)]
             [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Compare("Password", ErrorMessage = "Գաղտնաբառերը չեն համընկնում.")]
             public string ConfirmPassword { get; set; }
         }
 
@@ -105,81 +115,32 @@ namespace BeautySalon.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
-        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+        public async Task<IActionResult> OnPostAsync()
         {
-            returnUrl ??= Url.Content("~/");
             if (ModelState.IsValid)
             {
-                var user = CreateUser();
+                var tempUser = new IdentityUser { UserName = Input.Email };
+                var hashedPassword = _passwordHasher.HashPassword(tempUser, Input.Password);
 
-                await _userStore.SetUserNameAsync(user, Input.FullName, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-
-                var result = await _userManager.CreateAsync(user, Input.Password);
-
-                if (result.Succeeded)
+                var pendingRegistration = new PendingRegistration
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    Email = Input.Email,
+                    FullName = Input.FullName,
+                    PasswordHash = hashedPassword,
+                    RegistrationDate = DateTime.UtcNow
+                };
 
-                    // Ստուգում ենք Admin դերի առկայությունը և ստեղծում, եթե չկա
-                    if (!await _roleManager.RoleExistsAsync("Admin"))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole("Admin"));
-                    }
+                _context.PendingRegistrations.Add(pendingRegistration);
+                await _context.SaveChangesAsync();
 
-                    // Ստանում ենք Admin-ին
-                    var adminUsers = await _userManager.GetUsersInRoleAsync("Admin");
-                    var admin = adminUsers.FirstOrDefault();
+                // Օգտագործում ենք առկա SendAdminNotificationAsync մեթոդը
+                await _emailService.SendAdminNotificationAsync(Input.Email, Input.FullName);
 
-                    if (admin != null)
-                    {
-                        // Ավելացնում ենք նոր օգտատիրոջը Admin-ի կառավարվող օգտատերերի ցանկում
-                        // Այստեղ ենթադրում ենք, որ Admin-ը ունի ManagedUsers հատկություն
-                        // Եթե չունի, պետք է ստեղծել այն Admin-ի մոդելում
-                        var adminClaims = await _userManager.GetClaimsAsync(admin);
-                        var managedUsersClaim = adminClaims.FirstOrDefault(c => c.Type == "ManagedUsers");
-
-                        if (managedUsersClaim != null)
-                        {
-                            var managedUsers = managedUsersClaim.Value.Split(',').ToList();
-                            managedUsers.Add(user.Id);
-                            await _userManager.ReplaceClaimAsync(admin, managedUsersClaim, new System.Security.Claims.Claim("ManagedUsers", string.Join(',', managedUsers)));
-                        }
-                        else
-                        {
-                            await _userManager.AddClaimAsync(admin, new System.Security.Claims.Claim("ManagedUsers", user.Id));
-                        }
-                    }
-
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                        protocol: Request.Scheme);
-
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                    }
-                    else
-                    {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
-                }
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+                //        // Հաղորդագրություն օգտատիրոջը
+                TempData["Message"] = "Ձեր գրանցման հայտը ստացվել է: Խնդրում ենք սպասել հաստատման:";
+                return RedirectToPage();
             }
 
-            // If we got this far, something failed, redisplay form
             return Page();
         }
 
