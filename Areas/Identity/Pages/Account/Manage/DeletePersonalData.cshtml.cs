@@ -1,6 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -82,6 +80,20 @@ namespace BeautySalon.Areas.Identity.Pages.Account.Manage
                 if (!await _userManager.CheckPasswordAsync(user, Input.Password))
                 {
                     ModelState.AddModelError(string.Empty, "Incorrect password.");
+                    return Page();
+                }
+            }
+
+            // Ստուգում, արդյոք օգտատերը Admin է
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                // Հաշվել Admin դերում գտնվող օգտատերերի քանակը
+                var adminCount = (await _userManager.GetUsersInRoleAsync("Admin")).Count;
+
+                // Եթե միայն մեկ Admin կա, թույլ չտալ ջնջել
+                if (adminCount == 1)
+                {
+                    ModelState.AddModelError(string.Empty, "Չի կարելի ջնջել միակ ադմինիստրատորին:");
                     return Page();
                 }
             }

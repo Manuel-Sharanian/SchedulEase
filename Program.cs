@@ -60,18 +60,18 @@ namespace BeautySalon
 
             var app = builder.Build();
 
-            // Seed roles and admin user
+            // Ստեղծում ենք միայն դերերը
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var logger = services.GetRequiredService<ILogger<Program>>();
                 try
                 {
-                    await SeedRolesAndAdminAsync(services, app.Configuration, logger);
+                    await CreateRolesAsync(services, logger);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "An error occurred while seeding roles and admin.");
+                    logger.LogError(ex, "An error occurred while creating roles.");
                 }
             }
 
@@ -102,11 +102,9 @@ namespace BeautySalon
             app.Run();
         }
 
-
-        private static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider, IConfiguration configuration, ILogger logger)
+        private static async Task CreateRolesAsync(IServiceProvider serviceProvider, ILogger logger)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
             string[] roleNames = { "Admin", "User" };
 
@@ -123,50 +121,6 @@ namespace BeautySalon
                     else
                     {
                         logger.LogError($"Failed to create role: {roleName}");
-                    }
-                }
-            }
-
-            var adminEmails = new[] { "admin@admin.com", "admin1@admin.com" };
-            var adminPassword = configuration["AdminUser:Password"] ?? throw new InvalidOperationException("Admin password not configured.");
-
-            foreach (var adminEmail in adminEmails)
-            {
-                var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-                if (adminUser == null)
-                {
-                    var newAdmin = new IdentityUser
-                    {
-                        UserName = adminEmail,
-                        Email = adminEmail,
-                        EmailConfirmed = true
-                    };
-                    var createAdminResult = await userManager.CreateAsync(newAdmin, adminPassword);
-                    if (createAdminResult.Succeeded)
-                    {
-                        logger.LogInformation($"Created new admin user: {adminEmail}");
-                        await userManager.AddToRoleAsync(newAdmin, "Admin");
-                        logger.LogInformation($"Added admin user to Admin role");
-                    }
-                    else
-                    {
-                        logger.LogError($"Failed to create admin user: {string.Join(", ", createAdminResult.Errors.Select(e => e.Description))}");
-                    }
-                }
-                else
-                {
-                    if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-                    {
-                        await userManager.AddToRoleAsync(adminUser, "Admin");
-                        logger.LogInformation($"Added existing user to Admin role: {adminEmail}");
-                    }
-
-                    if (!adminUser.EmailConfirmed)
-                    {
-                        adminUser.EmailConfirmed = true;
-                        await userManager.UpdateAsync(adminUser);
-                        logger.LogInformation($"Confirmed email for existing admin user: {adminEmail}");
                     }
                 }
             }

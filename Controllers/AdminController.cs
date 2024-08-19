@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
@@ -31,7 +32,7 @@ public class AdminController : Controller
     }
 
     [HttpGet]
-    [AllowAnonymous] // Կամ [Authorize(Roles = "Admin")]
+    [AllowAnonymous]
     public async Task<IActionResult> ApproveUser(string email, string fullName, string token)
     {
         var pendingRegistration = await _context.PendingRegistrations
@@ -53,8 +54,23 @@ public class AdminController : Controller
 
         if (result.Succeeded)
         {
-            await _userManager.AddToRoleAsync(user, "User");
+            // Ստուգում ենք արդյոք սա առաջին օգտատերն է
+            var isFirstUser = !await _userManager.Users.AnyAsync(u => u.Id != user.Id);
 
+            if (isFirstUser)
+            {
+                await _userManager.AddToRoleAsync(user, "Admin");
+            }
+            else
+            {
+                await _userManager.AddToRoleAsync(user, "User");
+            }
+
+            // Հեռացնում ենք pending registration-ը
+            _context.PendingRegistrations.Remove(pendingRegistration);
+            await _context.SaveChangesAsync();
+
+            // Ուղարկում ենք էլ. փոստ օգտատիրոջը
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
             var callbackUrl = Url.Page(
@@ -64,9 +80,6 @@ public class AdminController : Controller
                 protocol: HttpContext.Request.Scheme);
 
             await _emailService.SendEmailConfirmationAsync(pendingRegistration.Email, callbackUrl);
-
-            // Տպում ենք callbackUrl-ը լոգերում կամ կոնսոլում դեբագի համար
-            Console.WriteLine($"Generated callbackUrl: {callbackUrl}");
 
             return Content("Օգտատերը հաստատվել է և հաստատման էլ. նամակն ուղարկվել է:");
         }
@@ -91,7 +104,6 @@ public class AdminController : Controller
         return View(userViewModels);
     }
 
-
     [HttpPost]
     public async Task<IActionResult> ChangeRole(string userId, string newRole)
     {
@@ -103,13 +115,13 @@ public class AdminController : Controller
 
         var currentUserRoles = await _userManager.GetRolesAsync(user);
 
-        // Check whether is this semi-final Admin
+        // Ստուգում ենք արդյոք սա վերջին Admin-ն է
         if (currentUserRoles.Contains("Admin") && newRole != "Admin")
         {
             var adminCount = (await _userManager.GetUsersInRoleAsync("Admin")).Count;
-            if (adminCount <= 2)
+            if (adminCount <= 1)
             {
-                TempData["Error"] = "Չի կարելի հեռացնել նախավերջին Admin-ին";
+                TempData["Error"] = "Չի կարելի հեռացնել վերջին Admin-ին";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -120,4 +132,28 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteUser(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var result = await _userManager.DeleteAsync(user);
+        if (result.Succeeded)
+        {
+            return RedirectToAction("Index");
+        }
+        else
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            return RedirectToAction("Index");
+        }
+    }
 }

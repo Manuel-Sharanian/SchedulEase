@@ -1,14 +1,14 @@
 ﻿@model List<UserViewModel>
 
-<h2 class="text-center mb-4 page-title">Օգտատերերի կառավարում</h2> 
-@* <h3 class="text-center my-4">Անհրաժեշտ է ամենաքիչը 2 Admin Account</h3> *@
+<h2 class="text-center mb-4 page-title">Օգտատերերի կառավարում</h2>
 
- <div class="container">
+<div class="container">
     <table class="table table-striped table-hover">
         <thead class="thead-dark">
             <tr>
                 <th>Օգտանուն</th>
                 <th>Դերեր</th>
+                <th>Գործողություններ</th>
             </tr>
         </thead>
         <tbody>
@@ -16,7 +16,11 @@
             {
                 <tr>
                     <td>@user.FullName</td>
-                    <td>@string.Join(", ", user.Roles)</td>
+                    <td>
+                        <span class="badge badge-@(user.Roles.Contains("Admin") ? "danger" : "secondary")">
+                            @string.Join(", ", user.Roles)
+                        </span>
+                    </td>
                     <td>
                         <form asp-action="ChangeRole" method="post" class="d-flex mb-2">
                             <input type="hidden" name="userId" value="@user.Id" />
@@ -24,14 +28,21 @@
                                 <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
                                 <option value="User" selected="@(user.Roles.Contains("User"))">User</option>
                             </select>
-                            <button type="submit" class="btn btn-primary">Փոխել</button>
+                            <button type="submit" class="btn btn-primary mr-2">Փոխել</button>
                         </form>
+                        @if (!user.Roles.Contains("Admin"))
+                        {
+                            <form asp-action="DeleteUser" method="post" onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս օգտատիրոջը:');">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="btn btn-danger">Ջնջել</button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }
         </tbody>
-        <a asp-controller="IncomeReport" asp-action="Index" class="btn btn-info">Եկամտի հաշվետվություն</a>
     </table>
+    <a asp-controller="IncomeReport" asp-action="Index" class="btn btn-info">Եկամտի հաշվետվություն</a>
 </div>
 
 <style>
@@ -68,4 +79,34 @@
             outline: none;
             box-shadow: none;
         }
-</style> 
+
+    .btn-danger {
+        background-color: #dc3545;
+    }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+    /* Badge Styles for Role Visibility */
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 12px;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 12px;
+    }
+
+    /* Row Hover Highlight */
+    tr:hover {
+        background-color: #6c757d;
+    }
+</style>
