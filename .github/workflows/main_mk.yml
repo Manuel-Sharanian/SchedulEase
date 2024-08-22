@@ -57,3 +57,5 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_72CD61D54351477BB8911BCA233615F1 }}
           package: .
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
