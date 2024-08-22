@@ -1,14 +1,13 @@
 {
   "dependencies": {
-    "mssql2": {
-      "ignored": "true",
-      "type": "mssql",
-      "connectionId": "ConnectionStrings:DefaultConnection"
-    },
     "mssql1": {
       "ignored": "true",
       "type": "mssql",
       "connectionId": "ConnectionStrings:BeautySalonContextConnection"
+    },
+    "mssql2": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:DefaultConnection"
     }
   }
 }

@@ -1,12 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UserSecretsId>aspnet-BeautySalon-2f6cf8e8-b9be-45be-80a0-30d7777a51f7</UserSecretsId>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="jQuery" Version="3.7.1" />
     <PackageReference Include="jQuery.UI.Combined" Version="1.13.3" />
@@ -22,9 +21,8 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.4" />
     <PackageReference Include="SendGrid" Version="9.29.3" />
   </ItemGroup>
-
   <ItemGroup>
+    <Folder Include=".github\workflows\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
-
 </Project>
