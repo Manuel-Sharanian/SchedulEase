@@ -2,6 +2,7 @@
 using BeautySalon.Middleware;
 using BeautySalon.Models;
 using BeautySalon.Services;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
