@@ -2,7 +2,6 @@
 using BeautySalon.Middleware;
 using BeautySalon.Models;
 using BeautySalon.Services;
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +56,11 @@ namespace BeautySalon
             // Add logging
             builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
             builder.Logging.AddConsole();
-            builder.Logging.AddDebug();
+            //builder.Logging.AddDebug();
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Logging.AddDebug();
+            }
 
             var app = builder.Build();
 

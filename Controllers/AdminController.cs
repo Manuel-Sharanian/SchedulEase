@@ -81,7 +81,7 @@ public class AdminController : Controller
 
             await _emailService.SendEmailConfirmationAsync(pendingRegistration.Email, callbackUrl);
 
-            return Content("Օգտատերը հաստատվել է և հաստատման էլ. նամակն ուղարկվել է:");
+            return View("ApprovalConfirmation");
         }
 
         return Content($"Սխալ օգտատիրոջը հաստատելիս: {string.Join(", ", result.Errors.Select(e => e.Description))}");

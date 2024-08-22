@@ -74,7 +74,7 @@ namespace BeautySalon.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("BeautySalon.Models.Client", b =>
@@ -104,7 +104,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clients");
+                    b.ToTable("Clients", (string)null);
                 });
 
             modelBuilder.Entity("BeautySalon.Models.IncomeReport", b =>
@@ -126,7 +126,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("IncomeReports");
+                    b.ToTable("IncomeReports", (string)null);
                 });
 
             modelBuilder.Entity("BeautySalon.Models.PendingRegistration", b =>
@@ -154,7 +154,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PendingRegistrations");
+                    b.ToTable("PendingRegistrations", (string)null);
                 });
 
             modelBuilder.Entity("BeautySalon.Models.Service", b =>
@@ -174,7 +174,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Services");
+                    b.ToTable("Services", (string)null);
                 });
 
             modelBuilder.Entity("BeautySalon.Models.UserIncomeReport", b =>
@@ -202,7 +202,7 @@ namespace BeautySalon.Migrations
 
                     b.HasIndex("IncomeReportId");
 
-                    b.ToTable("UserIncomeReports");
+                    b.ToTable("UserIncomeReports", (string)null);
                 });
 
             modelBuilder.Entity("BeautySalon.Models.UserSavedReport", b =>
@@ -222,7 +222,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserSavedReports");
+                    b.ToTable("UserSavedReports", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

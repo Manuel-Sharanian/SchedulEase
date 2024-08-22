@@ -68,32 +68,25 @@ public class EmailService : IEmailService
         await client.SendEmailAsync(msg);
     }
 
-
     public async Task SendAdminNotificationAsync(string userEmail, string userName)
     {
         var adminEmail = _configuration["AdminEmail"];
-        var subject = "New User Registration Request";
+        var subject = "Նոր օգտատիրոջ գրանցման հայտ";
         var token = Guid.NewGuid().ToString();
-
         var baseUrl = _configuration["AppSettings:BaseUrl"];
         var approveUrl = $"{baseUrl}/Admin/ApproveUser?email={Uri.EscapeDataString(userEmail)}&fullName={Uri.EscapeDataString(userName)}&token={token}";
-
-        var plainTextContent = $"A new user has requested registration:\n\nName: {userName}\nEmail: {userEmail}\n\nTo approve this request, copy and paste this URL into your browser: {approveUrl}";
-
+        var plainTextContent = $"Նոր օգտատեր է հայտ ներկայացրել գրանցման համար:\n\nԱնուն: {userName}\nԷլ. փոստ: {userEmail}\n\nԱյս հայտը հաստատելու համար պատճենեք և տեղադրեք այս URL-ը ձեր բրաուզերում: {approveUrl}";
         var htmlContent = $@"
-        <h2>New User Registration Request</h2>
-        <p>A new user has requested registration:</p>
-        <p><strong>Name:</strong> {HtmlEncoder.Default.Encode(userName)}</p>
-        <p><strong>Email:</strong> {HtmlEncoder.Default.Encode(userEmail)}</p>
-        <p>To approve this request, <a href='{HtmlEncoder.Default.Encode(approveUrl)}'>click here</a>.</p>";
-
+    <h2>Նոր օգտատիրոջ գրանցման հայտ</h2>
+    <p><strong>Անուն:</strong> {HtmlEncoder.Default.Encode(userName)}</p>
+    <p><strong>Էլ. փոստ:</strong> {HtmlEncoder.Default.Encode(userEmail)}</p>
+    <p>Այս հայտը հաստատելու համար <a href='{HtmlEncoder.Default.Encode(approveUrl)}'>սեղմեք այստեղ</a>.</p>";
         var msg = MailHelper.CreateSingleEmail(
             new EmailAddress("boxerlionmms@gmail.com", "MK"),
             new EmailAddress(adminEmail),
             subject,
             plainTextContent,
             htmlContent);
-
         var client = new SendGridClient(_configuration["SendGrid:ApiKey"]);
         var response = await client.SendEmailAsync(msg);
     }
