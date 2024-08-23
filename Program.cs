@@ -1,4 +1,6 @@
-﻿using BeautySalon.Data;
+﻿using System.Configuration;
+
+using BeautySalon.Data;
 using BeautySalon.Middleware;
 using BeautySalon.Models;
 using BeautySalon.Services;
