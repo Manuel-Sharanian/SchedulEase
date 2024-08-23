@@ -2,6 +2,8 @@
 using BeautySalon.Middleware;
 using BeautySalon.Models;
 using BeautySalon.Services;
+
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -104,8 +106,8 @@ namespace BeautySalon
             app.MapRazorPages();
 
             app.Run();
-        }
 
+        }
         private static async Task CreateRolesAsync(IServiceProvider serviceProvider, ILogger logger)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
