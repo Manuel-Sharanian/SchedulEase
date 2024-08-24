@@ -20,7 +20,7 @@ public class EmailService : IEmailService
 
     public async Task SendPasswordResetEmailAsync(string toEmail, string callbackUrl)
     {
-        var apiKey = _configuration["SendGrid:ApiKey"];
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Գաղտնաբառի վերականգնում";
@@ -33,7 +33,7 @@ public class EmailService : IEmailService
 
     public async Task SendEmailConfirmationAsync(string toEmail, string callbackUrl)
     {
-        var apiKey = _configuration["SendGrid:ApiKey"];
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Հաստատեք ձեր էլ. փոստի հասցեն";
@@ -46,7 +46,7 @@ public class EmailService : IEmailService
 
     public async Task SendChangeEmailConfirmationAsync(string toEmail, string callbackUrl)
     {
-        var apiKey = _configuration["SendGrid:ApiKey"];
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Հաստատեք ձեր նոր էլ. փոստի հասցեն";
@@ -60,7 +60,7 @@ public class EmailService : IEmailService
 
     public async Task SendEmailAsync(string email, string subject, string message)
     {
-        var apiKey = _configuration["SendGrid:ApiKey"];
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var to = new EmailAddress(email);
