@@ -65,7 +65,7 @@ jobs:
     runs-on: windows-latest
     needs: build
     environment:
-      name: 'Development'
+      name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
@@ -73,22 +73,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: .net-app
-      - name: List directory contents
-        run: Get-ChildItem -Path . -Recurse
-        shell: pwsh
-            
-      - name: Apply database migrations
-        run: |
-            dotnet tool install --global dotnet-ef
-            $projectPath = Get-ChildItem -Path . -Filter *.csproj -Recurse | Select-Object -First 1 -ExpandProperty FullName
-            if ($projectPath) {
-                Write-Host "Found project file: $projectPath"
-                dotnet ef database update --project $projectPath --connection "${{ secrets.AZURE_SQL_CONNECTIONSTRING }}" --verbose
-            } else {
-                Write-Error "No .csproj file found"
-                exit 1
-            }
-            shell: pwsh
           
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
