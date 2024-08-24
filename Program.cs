@@ -4,7 +4,7 @@ using BeautySalon.Data;
 using BeautySalon.Middleware;
 using BeautySalon.Models;
 using BeautySalon.Services;
-
+using Microsoft.Extensions.Logging.AzureAppServices;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -65,8 +65,12 @@ namespace BeautySalon
             {
                 builder.Logging.AddDebug();
             }
-
             var app = builder.Build();
+
+            if (app.Environment.IsProduction())
+            {
+                builder.Logging.AddAzureWebAppDiagnostics();
+            }
 
             // Ստեղծում ենք միայն դերերը
             using (var scope = app.Services.CreateScope())

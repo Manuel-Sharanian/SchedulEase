@@ -65,7 +65,7 @@ jobs:
     runs-on: windows-latest
     needs: build
     environment:
-      name: 'Production'
+      name: 'Development'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
@@ -73,6 +73,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: .net-app
+      - name: Apply database migrations
+        run: |
+            dotnet tool install --global dotnet-ef
+            dotnet ef database update --connection "${{ secrets.AZURE_SQL_CONNECTIONSTRING }}"
           
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
