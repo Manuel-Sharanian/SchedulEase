@@ -74,14 +74,20 @@ jobs:
         with:
           name: .net-app
       - name: List directory contents
-        run: |
-            dir /s
-            shell: cmd
-
+        run: Get-ChildItem -Path . -Recurse
+        shell: pwsh
+            
       - name: Apply database migrations
         run: |
             dotnet tool install --global dotnet-ef
-            dotnet ef database update --project D:\a\MKProduct\MKProduct\BeautySalon.csproj --connection "${{ secrets.AZURE_SQL_CONNECTIONSTRING }}" --verbose
+            $projectPath = Get-ChildItem -Path . -Filter *.csproj -Recurse | Select-Object -First 1 -ExpandProperty FullName
+            if ($projectPath) {
+                Write-Host "Found project file: $projectPath"
+                dotnet ef database update --project $projectPath --connection "${{ secrets.AZURE_SQL_CONNECTIONSTRING }}" --verbose
+            } else {
+                Write-Error "No .csproj file found"
+                exit 1
+            }
             shell: pwsh
           
       - name: Deploy to Azure Web App
