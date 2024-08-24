@@ -76,7 +76,9 @@ jobs:
       - name: Apply database migrations
         run: |
             dotnet tool install --global dotnet-ef
-            dotnet ef database update --connection "${{ secrets.AZURE_SQL_CONNECTIONSTRING }}"
+            dir
+            dotnet ef database update --project BeautySalon.csproj --connection "${{ secrets.AZURE_SQL_CONNECTIONSTRING }}"
+            working-directory: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
           
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
