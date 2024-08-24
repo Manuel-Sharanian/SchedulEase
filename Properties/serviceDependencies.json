@@ -12,6 +12,10 @@
     "compute.appService1": {
       "group": "connections",
       "type": "compute.appService"
+    },
+    "mssql3": {
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING"
     }
   }
 }
