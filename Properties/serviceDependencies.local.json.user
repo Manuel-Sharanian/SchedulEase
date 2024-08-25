@@ -7,16 +7,24 @@
     "compute.appService1": {
       "restored": true,
       "restoreTime": "2024-08-24T06:46:45.6619417Z"
+    },
+    "mssql3": {
+      "restored": true,
+      "restoreTime": "2024-08-25T09:57:59.1612279Z"
+    },
+    "mssql1": {
+      "restored": true,
+      "restoreTime": "2024-08-25T20:05:15.8458738Z"
     }
   },
   "parameters": {
-    "compute.appService1.subscriptionId": {
-      "Name": "compute.appService1.subscriptionId",
+    "mssql3.subscriptionId": {
+      "Name": "mssql3.subscriptionId",
       "Type": "subscription",
       "Value": "efee79da-7eb5-42fc-b2f4-88461d349590"
     },
-    "compute.appService1.resourceGroupName": {
-      "Name": "compute.appService1.resourceGroupName",
+    "mssql3.resourceGroupName": {
+      "Name": "mssql3.resourceGroupName",
       "Type": "resourceGroup",
       "Value": "MKResource"
     }
