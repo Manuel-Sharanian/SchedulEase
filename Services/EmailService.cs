@@ -20,7 +20,8 @@ public class EmailService : IEmailService
 
     public async Task SendPasswordResetEmailAsync(string toEmail, string callbackUrl)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
+                        ?? _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Գաղտնաբառի վերականգնում";
@@ -33,7 +34,8 @@ public class EmailService : IEmailService
 
     public async Task SendEmailConfirmationAsync(string toEmail, string callbackUrl)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
+                        ?? _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Հաստատեք ձեր էլ. փոստի հասցեն";
@@ -46,7 +48,8 @@ public class EmailService : IEmailService
 
     public async Task SendChangeEmailConfirmationAsync(string toEmail, string callbackUrl)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
+                        ?? _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Հաստատեք ձեր նոր էլ. փոստի հասցեն";
@@ -60,7 +63,8 @@ public class EmailService : IEmailService
 
     public async Task SendEmailAsync(string email, string subject, string message)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
+                        ?? _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var to = new EmailAddress(email);
@@ -73,7 +77,12 @@ public class EmailService : IEmailService
         var adminEmail = _configuration["AdminEmail"];
         var subject = "Նոր օգտատիրոջ գրանցման հայտ";
         var token = Guid.NewGuid().ToString();
-        var baseUrl = _configuration["AppSettings:BaseUrl"];
+        // Ստանում ենք ընթացիկ միջավայրը
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+
+        // Ընտրում ենք համապատասխան BaseUrl-ը
+        var baseUrl = _configuration[$"AppSettings:BaseUrl:{environment}"];
+
         var approveUrl = $"{baseUrl}/Admin/ApproveUser?email={Uri.EscapeDataString(userEmail)}&fullName={Uri.EscapeDataString(userName)}&token={token}";
         var plainTextContent = $"Նոր օգտատեր է հայտ ներկայացրել գրանցման համար:\n\nԱնուն: {userName}\nԷլ. փոստ: {userEmail}\n\nԱյս հայտը հաստատելու համար պատճենեք և տեղադրեք այս URL-ը ձեր բրաուզերում: {approveUrl}";
         var htmlContent = $@"
@@ -87,7 +96,8 @@ public class EmailService : IEmailService
             subject,
             plainTextContent,
             htmlContent);
-        var client = new SendGridClient(_configuration["SendGrid:ApiKey"]);
+        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY") ?? _configuration["SendGrid:ApiKey"];
+        var client = new SendGridClient(apiKey);
         var response = await client.SendEmailAsync(msg);
     }
 

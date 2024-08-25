@@ -28,6 +28,7 @@ namespace BeautySalon
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
             builder.Services.AddTransient<IEmailService, EmailService>();
+            builder.Configuration.AddEnvironmentVariables();
             builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = true;
