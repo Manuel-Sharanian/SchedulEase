@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "mssql2": {
+      "ignored": "true",
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:DefaultConnection"
+    },
     "mssql3": {
       "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/MK/providers/Microsoft.ServiceLinker/linkers/ConnectionStringsAZURE_SQL_CONNECTIONSTR_727E9072FD",
       "secretStore": "AzureAppSettings",
@@ -7,11 +12,6 @@
       "type": "mssql.azure",
       "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING",
       "dynamicId": null
-    },
-    "mssql2": {
-      "ignored": "true",
-      "type": "mssql",
-      "connectionId": "ConnectionStrings:DefaultConnection"
     }
   }
 }

@@ -1,16 +1,12 @@
 {
   "dependencies": {
-    "compute.appService1": {
-      "restored": true,
-      "restoreTime": "2024-08-24T06:46:45.6619417Z"
-    },
     "mssql2": {
       "restored": true,
       "restoreTime": "2024-08-22T16:40:21.6715219Z"
     },
-    "mssql3": {
+    "compute.appService1": {
       "restored": true,
-      "restoreTime": "2024-08-24T07:33:04.2804343Z"
+      "restoreTime": "2024-08-24T06:46:45.6619417Z"
     }
   },
   "parameters": {
@@ -19,18 +15,8 @@
       "Type": "subscription",
       "Value": "efee79da-7eb5-42fc-b2f4-88461d349590"
     },
-    "mssql3.subscriptionId": {
-      "Name": "mssql3.subscriptionId",
-      "Type": "subscription",
-      "Value": "efee79da-7eb5-42fc-b2f4-88461d349590"
-    },
     "compute.appService1.resourceGroupName": {
       "Name": "compute.appService1.resourceGroupName",
-      "Type": "resourceGroup",
-      "Value": "MKResource"
-    },
-    "mssql3.resourceGroupName": {
-      "Name": "mssql3.resourceGroupName",
       "Type": "resourceGroup",
       "Value": "MKResource"
     }
