@@ -3,11 +3,11 @@
     "mssql1": {
       "ignored": "true",
       "type": "mssql",
-      "connectionId": "ConnectionStrings:BeautySalonContextConnection"
+      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING"
     },
     "mssql2": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:DefaultConnection"
+      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING"
     },
     "compute.appService1": {
       "group": "connections",
