@@ -10,7 +10,8 @@
       "secretStore": "AzureAppSettings",
       "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/mkdatabaseserver/databases/MkDatabase",
       "type": "mssql.azure",
-      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING"
+      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING",
+      "dynamicId": null
     }
   }
 }

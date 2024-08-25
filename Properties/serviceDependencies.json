@@ -15,7 +15,8 @@
     },
     "mssql3": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING"
+      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING",
+      "dynamicId": null
     }
   }
 }
