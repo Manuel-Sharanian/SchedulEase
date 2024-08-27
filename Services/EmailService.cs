@@ -20,8 +20,7 @@ public class EmailService : IEmailService
 
     public async Task SendPasswordResetEmailAsync(string toEmail, string callbackUrl)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
-                        ?? _configuration["SendGrid:ApiKey"];
+        var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Գաղտնաբառի վերականգնում";
@@ -34,8 +33,7 @@ public class EmailService : IEmailService
 
     public async Task SendEmailConfirmationAsync(string toEmail, string callbackUrl)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
-                        ?? _configuration["SendGrid:ApiKey"];
+        var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Հաստատեք ձեր էլ. փոստի հասցեն";
@@ -48,8 +46,7 @@ public class EmailService : IEmailService
 
     public async Task SendChangeEmailConfirmationAsync(string toEmail, string callbackUrl)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
-                        ?? _configuration["SendGrid:ApiKey"];
+        var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var subject = "Հաստատեք ձեր նոր էլ. փոստի հասցեն";
@@ -63,8 +60,7 @@ public class EmailService : IEmailService
 
     public async Task SendEmailAsync(string email, string subject, string message)
     {
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY")
-                        ?? _configuration["SendGrid:ApiKey"];
+        var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
         var from = new EmailAddress("boxerlionmms@gmail.com", "MK");
         var to = new EmailAddress(email);
@@ -96,8 +92,7 @@ public class EmailService : IEmailService
             subject,
             plainTextContent,
             htmlContent);
-        string apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY") ?? _configuration["SendGrid:ApiKey"];
-        var client = new SendGridClient(apiKey);
+        var client = new SendGridClient(_configuration["SendGrid:ApiKey"]);
         var response = await client.SendEmailAsync(msg);
     }
 
