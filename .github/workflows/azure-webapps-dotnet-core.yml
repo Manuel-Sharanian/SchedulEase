@@ -85,14 +85,6 @@ jobs:
         - name: Verify EF Core CLI installation
           run: dotnet ef --version
 
-        - name: List directory contents
-          run: |
-            dir
-            echo "Current directory: $PWD"
-
-        - name: Restore NuGet packages
-          run: dotnet restore
-
         - name: Update database
           run: |
             dotnet ef database update --project BeautySalon.csproj
