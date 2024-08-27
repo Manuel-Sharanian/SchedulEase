@@ -18,20 +18,16 @@
 # For more samples to get started with GitHub Action workflows to deploy to Azure: https://github.com/Azure/actions-workflow-samples
 
 name: Build and deploy ASP.Net Core app to an Azure Web App
-
 env:
   AZURE_WEBAPP_NAME: MK    # set this to the name of your Azure Web App
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '8.0.x'                 # set this to the .NET Core version to use
-
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   build:
     runs-on: windows-latest
@@ -58,43 +54,24 @@ jobs:
         with:
           name: .net-app
           path: ${{github.workspace}}/myapp
-
   deploy:
-      permissions:
-        contents: none
-      runs-on: windows-latest
-      needs: build
-      environment:
-        name: 'Production'
-        url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-      steps:
-        - name: Download artifact from build job
-          uses: actions/download-artifact@v3
-          with:
-            name: .net-app
-    
-        - name: Set up .NET Core
-          uses: actions/setup-dotnet@v4
-          with:
-            dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-        - name: Install EF Core CLI
-          run: dotnet tool install --global dotnet-ef
-    
-        - name: Verify EF Core CLI installation
-          run: dotnet ef --version
-
-        - name: Update database
-          run: |
-            dotnet ef database update --project BeautySalon.csproj
-          env:
-            ConnectionStrings__AZURE_SQL_CONNECTIONSTRING: ${{ secrets.AZURE_SQL_CONNECTIONSTRING }}
-        
-        - name: Deploy to Azure Web App
-          id: deploy-to-webapp
-          uses: azure/webapps-deploy@v2
-          with:
-            app-name: ${{ env.AZURE_WEBAPP_NAME }}
-            publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-            package: .
+    permissions:
+      contents: none
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: .net-app
+          
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
