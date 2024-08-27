@@ -1,9 +1,5 @@
 {
   "dependencies": {
-    "mssql2": {
-      "restored": true,
-      "restoreTime": "2024-08-22T16:40:21.6715219Z"
-    },
     "compute.appService1": {
       "restored": true,
       "restoreTime": "2024-08-24T06:46:45.6619417Z"
@@ -11,10 +7,6 @@
     "mssql3": {
       "restored": true,
       "restoreTime": "2024-08-25T09:57:59.1612279Z"
-    },
-    "mssql1": {
-      "restored": true,
-      "restoreTime": "2024-08-25T20:05:15.8458738Z"
     }
   },
   "parameters": {

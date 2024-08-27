@@ -1,30 +1,3 @@
 {
-  "dependencies": {
-    "compute.appService1": {
-      "group": "connections",
-      "ignored": "true",
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/MK",
-      "type": "compute.appService"
-    },
-    "mssql3": {
-      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.ServiceLinker/locations/germanywestcentral/connectors/ConnectionStringsAZURE_SQL_CONNECTIONSTR_727E9072FD",
-      "secretStore": "LocalSecretsFile",
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/mkdatabaseserver/databases/MkDatabase",
-      "type": "mssql.azure",
-      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING",
-      "dynamicId": null
-    },
-    "mssql2": {
-      "serviceConnectorResourceId": "",
-      "secretStore": "LocalSecretsFile",
-      "type": "mssql.onprem",
-      "connectionId": "ConnectionStrings:DefaultConnection",
-      "dynamicId": null
-    },
-    "mssql1": {
-      "ignored": "true",
-      "type": "mssql",
-      "connectionId": "ConnectionStrings:BeautySalonContextConnection"
-    }
-  }
+  "dependencies": {}
 }

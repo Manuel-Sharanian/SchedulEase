@@ -1,14 +1,8 @@
 {
   "dependencies": {
-    "mssql3": {
+    "mssql1": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:AZURE_SQL_CONNECTIONSTRING",
-      "dynamicId": null
-    },
-    "mssql2": {
-      "type": "mssql",
-      "connectionId": "ConnectionStrings:DefaultConnection",
-      "dynamicId": null
+      "connectionId": "ConnectionStrings:DefualtConnection"
     }
   }
 }
