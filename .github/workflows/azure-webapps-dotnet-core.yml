@@ -73,6 +73,20 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: .net-app
+      
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef
+      
+      - name: Update database
+        run: |
+          dotnet ef database update
+        env:
+          ConnectionStrings__AZURE_SQL_CONNECTIONSTRING: ${{ secrets.AZURE_SQL_CONNECTIONSTRING }}
           
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
