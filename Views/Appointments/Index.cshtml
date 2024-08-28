@@ -235,9 +235,21 @@
     </div>
 }
 
-
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    @* Iphone-ի էկրանի համար հատուկ օրացույց *@
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr("#appointmentDateMobile", {
+            dateFormat: "Y-m-d",
+            defaultDate: "@selectedDate.ToString("yyyy-MM-dd")",
+            onChange: function (selectedDates, dateStr, instance) {
+                changeDate(dateStr);
+            }
+        });
+    });
+
     function redirectToCreate(date, time) {
         var userId = '@ViewBag.TargetUserId';
         window.location.href = '/Appointments/Create?userId=' + userId + '&date=' + date + '&time=' + time;
