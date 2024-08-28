@@ -2,21 +2,33 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
+
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <!-- Dropdown menu for larger screens -->
+        <li class="nav-item dropdown d-none d-md-block">
+            <a class="nav-link dropdown-toggle user-greeting" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Բարև @User.Identity?.Name! <span class="dropdown-arrow">&#9660;</span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Կարգավորումներ</a></li>
+                <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Կարգավորումներ</a></li>
                 <li>
                     <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                        <button type="submit" class="dropdown-item nav-link">Դուրս գալ</button>
+                        <button type="submit" class="dropdown-item">Դուրս գալ</button>
                     </form>
                 </li>
             </ul>
+        </li>
+
+        <!-- Direct links for small screens -->
+        <li class="nav-item d-block d-md-none">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Կարգավորումներ</a>
+        </li>
+        <li class="nav-item d-block d-md-none">
+            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit" class="nav-link btn-logout">Դուրս գալ</button>
+            </form>
         </li>
     }
     else
@@ -29,6 +41,7 @@
         </li>
     }
 </ul>
+
 
 
 <style>
