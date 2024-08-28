@@ -70,19 +70,16 @@
         $(document).ready(function () {
             var $navbarToggler = $('.navbar-toggler');
             var $navbarCollapse = $('.navbar-collapse');
-
             function toggleMenu() {
                 var isExpanded = $navbarCollapse.hasClass('show');
                 $navbarCollapse.collapse(isExpanded ? 'hide' : 'show');
                 $navbarToggler.toggleClass('is-active');
                 $navbarToggler.attr('aria-expanded', !isExpanded);
             }
-
             $navbarToggler.on('click', function (e) {
                 e.preventDefault();
                 toggleMenu();
             });
-
             // Փակել մենյուն էջի այլ մասում սեղմելիս
             $(document).on('click', function (e) {
                 if (!$(e.target).closest('.navbar').length) {
@@ -91,19 +88,15 @@
                     $navbarToggler.attr('aria-expanded', 'false');
                 }
             });
-
             $navbarToggler.removeClass('is-active');
             $navbarToggler.attr('aria-expanded', 'false');
         });
 
-
         let lastScrollTop = 0;
         const navbar = document.querySelector('.navbar');
         const navbarHeight = navbar.offsetHeight;
-
         window.addEventListener('scroll', function () {
             let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
             if (scrollTop > lastScrollTop) {
                 // Scroll Down
                 navbar.style.top = `-${navbarHeight}px`;
@@ -111,29 +104,67 @@
                 // Scroll Up
                 navbar.style.top = '20px';
             }
-
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         }, false);
 
-        // նավբարի "Բարև User!" մաս.
+        // նավբարի "Բարև User!" մաս
         document.addEventListener('DOMContentLoaded', function () {
             var dropdowns = document.querySelectorAll('.nav-item.dropdown');
-
             dropdowns.forEach(function (dropdown) {
-                dropdown.addEventListener('mouseenter', function () {
-                    this.querySelector('.dropdown-menu').style.display = 'block';
-                    setTimeout(() => {
-                        this.querySelector('.dropdown-menu').style.opacity = '1';
-                    }, 10);
-                });
+                var dropdownToggle = dropdown.querySelector('.dropdown-toggle');
+                var dropdownMenu = dropdown.querySelector('.dropdown-menu');
+                var isOpen = false;
 
-                dropdown.addEventListener('mouseleave', function () {
-                    var dropdownMenu = this.querySelector('.dropdown-menu');
-                    dropdownMenu.style.opacity = '0';
-                    setTimeout(() => {
-                        dropdownMenu.style.display = 'none';
-                    }, 300);
-                });
+                function toggleDropdown(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    isOpen = !isOpen;
+                    if (isOpen) {
+                        dropdownMenu.style.display = 'block';
+                        setTimeout(() => {
+                            dropdownMenu.style.opacity = '1';
+                        }, 10);
+                    } else {
+                        dropdownMenu.style.opacity = '0';
+                        setTimeout(() => {
+                            dropdownMenu.style.display = 'none';
+                        }, 300);
+                    }
+                }
+
+                // Ավելացնել click իրադարձություն բոլոր սարքերի համար
+                dropdownToggle.addEventListener('click', toggleDropdown);
+
+                // Պահպանել hover ֆունկցիոնալությունը համակարգիչների համար
+                if (window.matchMedia("(hover: hover)").matches) {
+                    dropdown.addEventListener('mouseenter', function () {
+                        isOpen = true;
+                        dropdownMenu.style.display = 'block';
+                        setTimeout(() => {
+                            dropdownMenu.style.opacity = '1';
+                        }, 10);
+                    });
+                    dropdown.addEventListener('mouseleave', function () {
+                        isOpen = false;
+                        dropdownMenu.style.opacity = '0';
+                        setTimeout(() => {
+                            dropdownMenu.style.display = 'none';
+                        }, 300);
+                    });
+                }
+            });
+
+            // Փակել բաց dropdown-ները էջի այլ մասում սեղմելիս
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('.nav-item.dropdown')) {
+                    dropdowns.forEach(function (dropdown) {
+                        var dropdownMenu = dropdown.querySelector('.dropdown-menu');
+                        dropdownMenu.style.opacity = '0';
+                        setTimeout(() => {
+                            dropdownMenu.style.display = 'none';
+                        }, 300);
+                    });
+                }
             });
         });
     </script>
