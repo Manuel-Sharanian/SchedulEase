@@ -6,6 +6,8 @@
     bool isAdmin = ViewBag.IsAdmin ?? false;
     int appointmentCounter = 0;
 }
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 
 <h1 class="text-center mb-4 page-title">Գրանցումներ - @userName</h1>
 
@@ -235,39 +237,9 @@
     </div>
 }
 
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
-    $("#appointmentDateMobile").datepicker({
-        dateFormat: 'yy-mm-dd',
-        onSelect: function(dateText) {
-            changeDate(dateText);
-        },
-        beforeShow: function(input, inst) {
-            // Ստուգում ենք, թե արդյոք սարքը մոբայլ է
-            var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            if (isMobile) {
-                // Եթե մոբայլ է, փոխում ենք datepicker-ի ոճը
-                inst.dpDiv.css({
-                    marginTop: '0',
-                    marginLeft: 0,
-                    width: '100%',
-                    height: '300px',
-                    position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)'
-                });
-            }
-        }
-    });
-});
-
-
-
-
     function redirectToCreate(date, time) {
         var userId = '@ViewBag.TargetUserId';
         window.location.href = '/Appointments/Create?userId=' + userId + '&date=' + date + '&time=' + time;
@@ -276,9 +248,6 @@
     function changeDate(date) {
         var userId = '@ViewBag.TargetUserId';
         window.location.href = '/Appointments/Index?userId=' + userId + '&selectedDate=' + date;
-
-            // Թարմացնում ենք նաև մոբայլ տարբերակի դաշտը
-            $("#appointmentDateMobile").datepicker("setDate", date);
     }
 
     var totalCompletedAmount = parseFloat('@ViewBag.TotalCompletedAmount'.replace(/,/g, ''));

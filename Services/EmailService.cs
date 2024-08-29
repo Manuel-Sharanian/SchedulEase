@@ -18,6 +18,7 @@ public class EmailService : IEmailService
         _configuration = configuration;
     }
 
+
     public async Task SendPasswordResetEmailAsync(string toEmail, string callbackUrl)
     {
         var apiKey = _configuration["SendGrid:ApiKey"];
@@ -30,6 +31,18 @@ public class EmailService : IEmailService
         var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
         var response = await client.SendEmailAsync(msg);
     }
+    //public async Task SendPasswordResetEmailAsync(string toEmail, string callbackUrl)
+    //{
+    //    var apiKey = _configuration["SendGrid:ApiKey"];
+    //    var client = new SendGridClient(apiKey);
+    //    var from = new EmailAddress("boxerlionmms@gmail.com", "Manuel Sharanyan");
+    //    var subject = "Email verification";
+    //    var to = new EmailAddress(toEmail);
+    //    var plainTextContent = $"This is my unique code A79B4F160ADC";
+    //    var htmlContent = $"<strong>This is my unique code A79B4F160ADC</strong>";
+    //    var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+    //    var response = await client.SendEmailAsync(msg);
+    //}
 
     public async Task SendEmailConfirmationAsync(string toEmail, string callbackUrl)
     {
