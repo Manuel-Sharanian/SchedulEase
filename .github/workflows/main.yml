@@ -1,0 +1,40 @@
+name: Delete old artifacts
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Աշխատել ամեն օր ժամը 1:00-ին
+
+jobs:
+  delete-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete artifacts
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs')
+            const daysToKeep = 7
+            const ms = daysToKeep * 24 * 60 * 60 * 1000
+            
+            async function deleteOldArtifacts() {
+              const { data: artifacts } = await github.rest.actions.listArtifactsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              })
+            
+              for (const artifact of artifacts.artifacts) {
+                const createdAt = new Date(artifact.created_at).getTime()
+                const now = new Date().getTime()
+                
+                if (now - createdAt > ms) {
+                  console.log('Deleting artifact', artifact.id, artifact.name)
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                  })
+                }
+              }
+            }
+            
+            await deleteOldArtifacts()
