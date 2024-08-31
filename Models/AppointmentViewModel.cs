@@ -15,5 +15,7 @@ namespace BeautySalon.Models
         public Service? Service { get; set; }
         public string? UserId { get; set; }
         public decimal EffectivePrice { get; set; }
+        public string? CreatedByUserId { get; set; }
+        public string? CreatedByUsername { get; set; }
     }
 }

@@ -47,7 +47,8 @@ namespace BeautySalon.Models
 
         public bool IsCompleted { get; set; }
 
-        public bool IsCreatedByAdmin { get; set; }
+        public string? CreatedByUserId { get; set; }
+        public string? CreatedByUsername { get; set; }
     }
 }
 

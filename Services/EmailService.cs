@@ -1,10 +1,10 @@
 ﻿using Azure.Core;
 using BeautySalon.Models;
 using BeautySalon.Services;
+using Humanizer;
 using Microsoft.Extensions.Configuration;
 using SendGrid;
 using SendGrid.Helpers.Mail;
-
 using System.Security.Policy;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -31,18 +31,6 @@ public class EmailService : IEmailService
         var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
         var response = await client.SendEmailAsync(msg);
     }
-    //public async Task SendPasswordResetEmailAsync(string toEmail, string callbackUrl)
-    //{
-    //    var apiKey = _configuration["SendGrid:ApiKey"];
-    //    var client = new SendGridClient(apiKey);
-    //    var from = new EmailAddress("boxerlionmms@gmail.com", "Manuel Sharanyan");
-    //    var subject = "Email verification";
-    //    var to = new EmailAddress(toEmail);
-    //    var plainTextContent = $"This is my unique code A79B4F160ADC";
-    //    var htmlContent = $"<strong>This is my unique code A79B4F160ADC</strong>";
-    //    var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-    //    var response = await client.SendEmailAsync(msg);
-    //}
 
     public async Task SendEmailConfirmationAsync(string toEmail, string callbackUrl)
     {

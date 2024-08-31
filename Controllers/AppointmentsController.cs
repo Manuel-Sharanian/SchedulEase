@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
-
+using Microsoft.Extensions.Logging;
 
 namespace BeautySalon.Controllers
 {
@@ -57,7 +57,9 @@ namespace BeautySalon.Controllers
                 Appointment = a,
                 Service = a.Service,
                 UserId = a.UserId,
-                EffectivePrice = a.CustomPrice.HasValue ? (a.CustomPrice.Value == 0 ? 0 : a.CustomPrice.Value) : a.Service?.Price ?? 0
+                EffectivePrice = a.CustomPrice.HasValue ? (a.CustomPrice.Value == 0 ? 0 : a.CustomPrice.Value) : a.Service?.Price ?? 0,
+                CreatedByUserId = a.CreatedByUserId,
+                CreatedByUsername = a.CreatedByUsername
             }).ToList();
 
             var completedAppointments = appointments.Where(a => a.IsCompleted);
@@ -185,14 +187,17 @@ namespace BeautySalon.Controllers
             {
                 targetUserId = userId;
                 appointment.UserId = userId;
-                appointment.IsCreatedByAdmin = true;
+                appointment.CreatedByUserId = currentUser.Id;
+                appointment.CreatedByUsername = currentUser.UserName;
             }
             else
             {
                 targetUserId = currentUser.Id;
                 appointment.UserId = currentUser.Id;
-                appointment.IsCreatedByAdmin = false;
+                appointment.CreatedByUserId = currentUser.Id;
+                appointment.CreatedByUsername = currentUser.UserName;
             }
+
             // Ստանում ենք թիրախային օգտատիրոջ անունը
             var targetUser = await _userManager.FindByIdAsync(targetUserId);
             ViewBag.UserName = targetUser != null ? targetUser.UserName : "Անհայտ օգտատեր";
@@ -200,16 +205,14 @@ namespace BeautySalon.Controllers
             ViewBag.HourOptions = GetHourOptions();
             ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName");
             ViewBag.UserId = appointment.UserId;
-            ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
             return View(appointment);
         }
-
 
         // POST: Appointments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,PhoneNumber,AppointmentDate,AppointmentHour,Duration,ClientId,ServiceId,UserId,IsCreatedByAdmin,CustomServiceName")] Appointment appointment)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,PhoneNumber,AppointmentDate,AppointmentHour,Duration,ClientId,ServiceId,UserId,CreatedByUserId,CreatedByUsername,CustomServiceName")] Appointment appointment)
         {
             if (ModelState.IsValid)
             {
@@ -230,15 +233,16 @@ namespace BeautySalon.Controllers
                         ViewBag.HourOptions = GetHourOptions();
                         ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
                         ViewBag.UserId = appointment.UserId;
-                        ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
                         return View(appointment);
                     }
-                    appointment.IsCreatedByAdmin = true;
+                    appointment.CreatedByUserId = currentUser.Id;
+                    appointment.CreatedByUsername = currentUser.UserName;
                 }
                 else
                 {
                     appointment.UserId = currentUser.Id;
-                    appointment.IsCreatedByAdmin = false;
+                    appointment.CreatedByUserId = currentUser.Id;
+                    appointment.CreatedByUsername = currentUser.UserName;
                 }
 
                 bool isAvailable = await IsTimeSlotAvailableForUser(appointment.AppointmentDate, appointment.AppointmentHour, appointment.Duration, appointment.UserId);
@@ -251,11 +255,11 @@ namespace BeautySalon.Controllers
                     ViewBag.HourOptions = GetHourOptions();
                     ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
                     ViewBag.UserId = appointment.UserId;
-                    ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
                     var user = await _userManager.FindByIdAsync(appointment.UserId);
                     ViewBag.UserName = user != null ? user.UserName : "Անհայտ օգտատեր";
                     return View(appointment);
                 }
+
 
                 // Check if the client already exists Ստուգում ենք արդյոք հաճախորդը գոյություն ունի բազայում թե ոչ
                 //var existingClient = await _context.Clients.FirstOrDefaultAsync(c => c.PhoneNumber == appointment.PhoneNumber);
@@ -304,7 +308,6 @@ namespace BeautySalon.Controllers
                     ViewBag.HourOptions = GetHourOptions();
                     ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
                     ViewBag.UserId = appointment.UserId;
-                    ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
                     var user = await _userManager.FindByIdAsync(appointment.UserId);
                     ViewBag.UserName = user != null ? user.UserName : "Անհայտ օգտատեր";
                     return View(appointment);
@@ -318,7 +321,6 @@ namespace BeautySalon.Controllers
             ViewBag.HourOptions = GetHourOptions();
             ViewData["ServiceId"] = new SelectList(_context.Services, "Id", "ServiceName", appointment.ServiceId);
             ViewBag.UserId = appointment.UserId;
-            ViewBag.IsCreatedByAdmin = appointment.IsCreatedByAdmin;
             return View(appointment);
         }
 

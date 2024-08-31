@@ -6,8 +6,6 @@
     bool isAdmin = ViewBag.IsAdmin ?? false;
     int appointmentCounter = 0;
 }
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 
 <h1 class="text-center mb-4 page-title">Գրանցումներ - @userName</h1>
 
@@ -74,9 +72,9 @@
                                 appointmentCounter++;
                                 var backgroundColor = appointmentCounter % 2 == 0 ? "#adebad" : "#b3d9ff";
                                 <td style="background-color: @backgroundColor;" rowspan="@rowspan">
-                                    @if (appointment.Appointment.IsCreatedByAdmin)
+                                    @if (appointment.CreatedByUserId != appointment.UserId)
                                     {
-                                        <span class="badge badge-info" style="margin-right: 5px;">By Admin</span>
+                                        <span class="badge badge-info" style="margin-right: 5px;">By @appointment.CreatedByUsername</span>
                                     }
                                     @appointment.Appointment.FirstName<br />
                                 </td>
@@ -122,7 +120,7 @@
                                         {
                                             <span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Կատարված</span>
                                         }
-                                        else
+                                        else if (isAdmin)
                                         {
                                             <a class="btn btn-success" id="markCompletedBtn_@appointment.Appointment.Id"
                                                style="text-decoration: none; margin-right: 5px;"
