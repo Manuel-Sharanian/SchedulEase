@@ -1,7 +1,7 @@
 name: Delete old artifacts
 on:
   schedule:
-    - cron: '0 1 * * *'  # Աշխատել ամեն օր ժամը 1:00-ին
+    - cron: '20 6 * * *'  # Աշխատել ամեն օր ժամը 6:20 AM-ին
 
 jobs:
   delete-artifacts:
