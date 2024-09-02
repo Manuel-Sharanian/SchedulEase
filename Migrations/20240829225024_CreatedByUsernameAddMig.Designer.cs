@@ -4,6 +4,7 @@ using BeautySalon.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BeautySalon.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240829225024_CreatedByUsernameAddMig")]
+    partial class CreatedByUsernameAddMig
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,10 +41,6 @@ namespace BeautySalon.Migrations
 
                     b.Property<int?>("ClientId")
                         .HasColumnType("int");
-
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedByUsername")
                         .IsRequired()
@@ -79,7 +78,7 @@ namespace BeautySalon.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("Appointments", (string)null);
+                    b.ToTable("Appointments");
                 });
 
             modelBuilder.Entity("BeautySalon.Models.Client", b =>
@@ -109,7 +108,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clients", (string)null);
+                    b.ToTable("Clients");
                 });
 
             modelBuilder.Entity("BeautySalon.Models.IncomeReport", b =>
@@ -131,7 +130,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("IncomeReports", (string)null);
+                    b.ToTable("IncomeReports");
                 });
 
             modelBuilder.Entity("BeautySalon.Models.PendingRegistration", b =>
@@ -159,7 +158,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PendingRegistrations", (string)null);
+                    b.ToTable("PendingRegistrations");
                 });
 
             modelBuilder.Entity("BeautySalon.Models.Service", b =>
@@ -179,7 +178,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Services", (string)null);
+                    b.ToTable("Services");
                 });
 
             modelBuilder.Entity("BeautySalon.Models.UserIncomeReport", b =>
@@ -207,7 +206,7 @@ namespace BeautySalon.Migrations
 
                     b.HasIndex("IncomeReportId");
 
-                    b.ToTable("UserIncomeReports", (string)null);
+                    b.ToTable("UserIncomeReports");
                 });
 
             modelBuilder.Entity("BeautySalon.Models.UserSavedReport", b =>
@@ -227,7 +226,7 @@ namespace BeautySalon.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserSavedReports", (string)null);
+                    b.ToTable("UserSavedReports");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
