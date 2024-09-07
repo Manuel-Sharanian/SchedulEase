@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
+    <link rel="icon" type="image/png" href="~/meta3.png" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BeautySalon.styles.css" asp-append-version="true" />
@@ -39,9 +40,12 @@
                                 <a class="nav-link" asp-controller="Clients" asp-action="index">Հաճախորդներ</a>
                             </li>
                         } *@
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Appointments" asp-action="index">Գրանցումներ</a>
-                        </li>
+                        @if (!User.IsInRole("Manager"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Appointments" asp-action="index">Գրանցումներ</a>
+                            </li>
+                        }
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Services" asp-action="index">Ծառայություններ</a>
                         </li>
@@ -49,6 +53,12 @@
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Admin" asp-action="index">Օգտատերեր</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Manager"))
+                        {
+                            <li class="nav-item">
+                                <a asp-controller="IncomeReport" asp-action="Index" class="nav-link">Եկամտի հաշվետվություն</a>
                             </li>
                         }
                     </ul>

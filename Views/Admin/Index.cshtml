@@ -1,5 +1,7 @@
 ﻿@model List<UserViewModel>
 <h2 class="text-center mb-4 page-title">Օգտատերերի կառավարում</h2>
+
+
 <div class="container">
     <div class="table-responsive d-none d-md-block">
         <table class="table table-striped table-hover">
@@ -16,7 +18,7 @@
                     <tr>
                         <td>@user.FullName</td>
                         <td>
-                            <span class="badge badge-@(user.Roles.Contains("Admin") ? "danger" : "secondary")">
+                            <span class="badge badge-@(user.Roles.Contains("Admin") ? "danger" : user.Roles.Contains("Manager") ? "warning" : "secondary")">
                                 @string.Join(", ", user.Roles)
                             </span>
                         </td>
@@ -25,6 +27,7 @@
                                 <input type="hidden" name="userId" value="@user.Id" />
                                 <select name="newRole" class="form-control mr-2 custom-select">
                                     <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
+                                    <option value="Manager" selected="@(user.Roles.Contains("Manager"))">Manager</option>
                                     <option value="User" selected="@(user.Roles.Contains("User"))">User</option>
                                 </select>
                                 <button type="submit" class="btn btn-primary mr-2">Փոխել</button>
@@ -42,7 +45,7 @@
             </tbody>
         </table>
     </div>
-    
+
     <div class="d-md-none">
         @foreach (var user in Model)
         {
@@ -50,7 +53,7 @@
                 <div class="card-body">
                     <h5 class="card-title">@user.FullName</h5>
                     <p class="card-text">
-                        <span class="badge badge-@(user.Roles.Contains("Admin") ? "danger" : "secondary")">
+                        <span class="badge badge-@(user.Roles.Contains("Admin") ? "danger" : user.Roles.Contains("Manager") ? "warning" : "secondary")">
                             @string.Join(", ", user.Roles)
                         </span>
                     </p>
@@ -59,6 +62,7 @@
                         <div class="form-group">
                             <select name="newRole" class="form-control custom-select">
                                 <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
+                                <option value="Manager" selected="@(user.Roles.Contains("Manager"))">Manager</option>
                                 <option value="User" selected="@(user.Roles.Contains("User"))">User</option>
                             </select>
                         </div>
@@ -75,9 +79,10 @@
             </div>
         }
     </div>
-    
+
     <a asp-controller="IncomeReport" asp-action="Index" class="btn btn-info">Եկամտի հաշվետվություն</a>
 </div>
+
 
 <style>
     .page-title {
@@ -148,5 +153,13 @@
             width: 100%;
             margin-bottom: 10px;
         }
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 12px;
     }
 </style>

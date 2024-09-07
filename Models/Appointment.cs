@@ -32,8 +32,6 @@ namespace BeautySalon.Models
         public string? PhoneNumber { get; set; }
         public Client? Client { get; set; }
 
-
-
         // One-to-many relationship
         public int? ServiceId { get; set; }
         public Service? Service { get; set; }

@@ -37,13 +37,11 @@ namespace BeautySalon.Controllers
                 return Challenge();
             }
             var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
 
-            // Եթե Admin է և userId տրված է, օգտագործում ենք այդ userId-ն
+            // Եթե Admin կամ Manager է և userId տրված է, օգտագործում ենք այդ userId-ն
             // Հակառակ դեպքում օգտագործում ենք ընթացիկ օգտատիրոջ Id-ն
-            var targetUserId = isAdmin && !string.IsNullOrEmpty(userId) ? userId : currentUser.Id;
-
-            // Ստուգում ենք՝ արդյոք դիտվում են սեփական գրանցումները
-            var isViewingOwnAppointments = targetUserId == currentUser.Id;
+            var targetUserId = (isAdmin || isManager) && !string.IsNullOrEmpty(userId) ? userId : currentUser.Id;
 
             DateTime date = selectedDate ?? DateTime.Today;
             var appointments = await _context.Appointments
@@ -94,13 +92,13 @@ namespace BeautySalon.Controllers
                 }
             }
 
-
             ViewBag.SelectedDate = date;
             ViewBag.TotalCompletedAmount = totalCompletedAmount;
             ViewBag.CompletedCount = completedCount;
             ViewBag.IsAdmin = isAdmin;
+            ViewBag.IsManager = isManager;
             ViewBag.TargetUserId = targetUserId;
-            ViewBag.IsViewingOwnAppointments = isViewingOwnAppointments;
+            //ViewBag.IsViewingOwnAppointments = isViewingOwnAppointments;
 
             return View(viewModels);
         }
@@ -155,6 +153,15 @@ namespace BeautySalon.Controllers
 
         private async Task<bool> IsTimeSlotAvailableForUser(DateTime date, TimeSpan startTime, int duration, string userId, int? currentAppointmentId = null)
         {
+            var now = DateTime.Now;
+            var appointmentDateTime = date.Date.Add(startTime);
+
+            // Ստուգում ենք՝ արդյոք նշանակման ժամանակը անցյալում է
+            if (appointmentDateTime < now)
+            {
+                return false; // Վերադարձնում ենք false, եթե նշանակումը անցյալում է
+            }
+
             var endTime = startTime.Add(TimeSpan.FromMinutes(duration));
             var startMinutes = (int)startTime.TotalMinutes;
             var endMinutes = (int)endTime.TotalMinutes;
@@ -180,10 +187,11 @@ namespace BeautySalon.Controllers
                 return Challenge();
             }
             var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
             var appointment = new Appointment();
 
             string targetUserId;
-            if (isAdmin && !string.IsNullOrEmpty(userId))
+            if ((isAdmin || isManager) && !string.IsNullOrEmpty(userId))
             {
                 targetUserId = userId;
                 appointment.UserId = userId;
@@ -223,8 +231,9 @@ namespace BeautySalon.Controllers
                 }
 
                 var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+                var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
 
-                if (isAdmin && !string.IsNullOrEmpty(appointment.UserId))
+                if ((isAdmin || isManager) && !string.IsNullOrEmpty(appointment.UserId))
                 {
                     var targetUser = await _userManager.FindByIdAsync(appointment.UserId);
                     if (targetUser == null)
@@ -248,7 +257,7 @@ namespace BeautySalon.Controllers
                 bool isAvailable = await IsTimeSlotAvailableForUser(appointment.AppointmentDate, appointment.AppointmentHour, appointment.Duration, appointment.UserId);
                 if (!isAvailable)
                 {
-                    ModelState.AddModelError("", "Ընտրված ժամանակահատվածը զբաղված է. Խնդրում ենք ընտրել այլ ժամ.");
+                    ModelState.AddModelError("", "Ընտրված ժամանակահատվածը զբաղված է կամ գտնվում է անցյալում. Խնդրում ենք ընտրել այլ ժամ.");
                     ViewBag.SelectedDate = appointment.AppointmentDate;
                     ViewBag.SelectedTime = appointment.AppointmentHour.ToString(@"hh\:mm");
                     ViewBag.SelectedServiceId = appointment.ServiceId;
@@ -324,6 +333,7 @@ namespace BeautySalon.Controllers
             return View(appointment);
         }
 
+
         // GET: Appointments/Edit/5
         public async Task<IActionResult> Edit(int id, string returnUrl)
         {
@@ -338,14 +348,16 @@ namespace BeautySalon.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
 
-            var users = await _userManager.Users
+            var userList = await _userManager.Users.ToListAsync();
+            var users = userList.Where(u => !userList.Any(m => m.Id == u.Id && _userManager.IsInRoleAsync(m, "Manager").Result))
                 .Select(u => new SelectListItem
                 {
                     Value = u.Id,
                     Text = u.UserName
                 })
-                .ToListAsync();
+                .ToList();
 
             var user = await _userManager.FindByIdAsync(appointment.UserId);
             var viewModel = new AppointmentEditViewModel
@@ -376,18 +388,29 @@ namespace BeautySalon.Controllers
             ViewBag.ReturnUrl = returnUrl;
             ViewBag.UserName = (await _userManager.FindByIdAsync(appointment.UserId))?.UserName ?? "Անհայտ օգտատեր";
             ViewBag.IsAdmin = isAdmin;
+            ViewBag.IsManager = isManager;
 
             return View(viewModel);
         }
+
         private async Task<List<SelectListItem>> GetUserSelectList()
         {
-            return await _userManager.Users
-                .Select(u => new SelectListItem
+            var users = await _userManager.Users.ToListAsync();
+            var userSelectList = new List<SelectListItem>();
+
+            foreach (var user in users)
+            {
+                if (!await _userManager.IsInRoleAsync(user, "Manager"))
                 {
-                    Value = u.Id,
-                    Text = u.UserName
-                })
-                .ToListAsync();
+                    userSelectList.Add(new SelectListItem
+                    {
+                        Value = user.Id,
+                        Text = user.UserName
+                    });
+                }
+            }
+
+            return userSelectList;
         }
 
         [HttpGet]
@@ -474,14 +497,15 @@ namespace BeautySalon.Controllers
         }
 
 
-
-        // Edit GET POST
+        // EDIT POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(AppointmentEditViewModel viewModel, string returnUrl)
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            var currentUserName = currentUser.UserName;
             var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
 
             if (ModelState.IsValid)
             {
@@ -494,18 +518,19 @@ namespace BeautySalon.Controllers
                     return NotFound();
                 }
 
-                // Եթե ադմինիստրատոր է և փոխել է օգտատիրոջը
-                if (isAdmin && viewModel.SelectedUserId != appointment.UserId)
+                // Եթե ադմինիստրատոր կամ մենեջեր է և փոխել է օգտատիրոջը
+                if ((isAdmin || isManager) && viewModel.SelectedUserId != appointment.UserId)
                 {
                     // Ստուգում ենք, արդյոք ընտրված ժամը հասանելի է նոր օգտատիրոջ համար
                     bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, viewModel.SelectedUserId);
                     if (!isAvailable)
                     {
-                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածն արդեն զբաղված է ընտրված օգտատիրոջ համար: Խնդրում ենք ընտրել այլ ժամ:");
+                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածն արդեն զբաղված է ընտրված օգտատիրոջ համար կամ գտնվում է անցյալում: Խնդրում ենք ընտրել այլ ժամ:");
                         viewModel.Users = await GetUserSelectList();
                         ViewBag.HourOptions = GetHourOptions();
                         ViewBag.ReturnUrl = returnUrl;
                         ViewBag.IsAdmin = isAdmin;
+                        ViewBag.IsManager = isManager;
 
                         viewModel.Services = await _context.Services.Select(s => new SelectListItem
                         {
@@ -524,7 +549,7 @@ namespace BeautySalon.Controllers
                     bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, appointment.UserId, appointment.Id);
                     if (!isAvailable)
                     {
-                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածն արդեն զբաղված է: Խնդրում ենք ընտրել այլ ժամ:");
+                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածը զբաղված է կամ գտնվում է անցյալում. Խնդրում ենք ընտրել այլ ժամ:");
                         viewModel.Users = await GetUserSelectList();
                         ViewBag.HourOptions = GetHourOptions();
                         ViewBag.ReturnUrl = returnUrl;
@@ -562,6 +587,11 @@ namespace BeautySalon.Controllers
 
                 appointment.Duration = viewModel.Duration;
 
+
+                // Թարմացնում ենք CreatedByUsername հատկությունը
+                appointment.CreatedByUsername = currentUserName;
+                appointment.CreatedByUserId = currentUser.Id;
+
                 _context.Update(appointment);
                 await _context.SaveChangesAsync();
 
@@ -577,6 +607,7 @@ namespace BeautySalon.Controllers
             ViewBag.HourOptions = GetHourOptions();
             ViewBag.ReturnUrl = returnUrl;
             ViewBag.IsAdmin = isAdmin;
+            ViewBag.IsManager = isManager;
 
             viewModel.Services = await _context.Services.Select(s => new SelectListItem
             {

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <UserSecretsId>aspnet-BeautySalon-2f6cf8e8-b9be-45be-80a0-30d7777a51f7</UserSecretsId>
     <ImplicitUsings>enable</ImplicitUsings>
+	<ServerGarbageCollection>false</ServerGarbageCollection>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="jQuery" Version="3.7.1" />

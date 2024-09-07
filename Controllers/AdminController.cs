@@ -43,12 +43,6 @@ public class AdminController : Controller
             return NotFound("Սպասվող գրանցում չի գտնվել:");
         }
 
-        //var user = new IdentityUser
-        //{
-        //    UserName = pendingRegistration.Email,
-        //    Email = pendingRegistration.Email,
-        //    PasswordHash = pendingRegistration.PasswordHash
-        //};
         var user = new IdentityUser
         {
             UserName = pendingRegistration.FullName,

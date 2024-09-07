@@ -58,6 +58,7 @@ namespace BeautySalon
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("RequireManagerRole", policy => policy.RequireRole("Manager"));
             });
 
             // Add logging
@@ -121,7 +122,7 @@ namespace BeautySalon
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            string[] roleNames = { "Admin", "User" };
+            string[] roleNames = { "Admin", "Manager", "User" };
 
             foreach (var roleName in roleNames)
             {

@@ -26,7 +26,7 @@ namespace BeautySalon.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> Index(DateTime? date)
         {
             DateTime selectedDate = date ?? DateTime.Today;
@@ -52,11 +52,12 @@ namespace BeautySalon.Controllers
             }
 
             ViewBag.SelectedDate = selectedDate;
+            ViewBag.IsAdmin = User.IsInRole("Admin");
             return View(dailyReport);
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> SaveIncomeReport([FromBody] IncomeReportViewModel model)
         {
             var existingReport = await _context.IncomeReports
@@ -117,8 +118,9 @@ namespace BeautySalon.Controllers
             });
         }
 
+
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> GetDailyTotals(DateTime date)
         {
             var report = await _context.IncomeReports
@@ -140,7 +142,7 @@ namespace BeautySalon.Controllers
 
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> CheckUserSavedReport(string userId, DateTime date)
         {
             var savedReport = await _context.UserSavedReports
@@ -150,7 +152,7 @@ namespace BeautySalon.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> MarkUserReportSaved(string userId, DateTime date)
         {
             var userSavedReport = new UserSavedReport

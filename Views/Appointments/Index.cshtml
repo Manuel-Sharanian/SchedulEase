@@ -120,7 +120,7 @@
                                         {
                                             <span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Կատարված</span>
                                         }
-                                        else if (isAdmin)
+                                        else if (isAdmin || User.IsInRole("Manager"))
                                         {
                                             <a class="btn btn-success" id="markCompletedBtn_@appointment.Appointment.Id"
                                                style="text-decoration: none; margin-right: 5px;"
@@ -177,7 +177,7 @@
                     <h4 class="text-center mb-0">Եկամտի Բաշխում</h4>
                 </div>
                 <div class="income-distribution-content" style="display: none;">
-                    @if (ViewBag.IsAdmin)
+                    @if (ViewBag.IsAdmin || User.IsInRole("Manager"))
                     {
                         <div class="row">
                             <div class="col-md-6">
@@ -225,7 +225,6 @@
         </div>
     </div>
 </div>
-
  
 
 @if (ViewBag.IsAdmin)

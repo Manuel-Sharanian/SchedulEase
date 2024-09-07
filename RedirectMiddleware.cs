@@ -17,6 +17,7 @@ namespace BeautySalon.Middleware
         {
             if (context.User.Identity.IsAuthenticated &&
                 !context.User.IsInRole("Admin") &&
+                !context.User.IsInRole("Manager") &&
                 context.Request.Path == "/")
             {
                 context.Response.Redirect("/Appointments/Index");

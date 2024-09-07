@@ -18,7 +18,7 @@
                 </div>
             </div>
         </div>
-        @if (User.IsInRole("Admin") && Model != null && Model.Any())
+        @if ((User.IsInRole("Admin") || User.IsInRole("Manager")) && Model != null && Model.Any())
         {
             foreach (var user in Model)
             {
