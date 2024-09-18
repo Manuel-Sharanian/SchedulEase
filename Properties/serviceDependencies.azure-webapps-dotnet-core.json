@@ -1,11 +1,8 @@
 {
   "dependencies": {
     "mssql1": {
-      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/MK/providers/Microsoft.ServiceLinker/linkers/ConnectionStringsDefualtConnection_65E1413C46",
-      "secretStore": "AzureAppSettings",
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/mkdatabaseserver/databases/MkDatabase",
-      "type": "mssql.azure",
-      "connectionId": "ConnectionStrings:DefualtConnection"
+      "ignored": "true",
+      "type": "mssql"
     }
   }
 }

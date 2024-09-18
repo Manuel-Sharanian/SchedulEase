@@ -40,8 +40,18 @@ namespace BeautySalon.Controllers
             var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
 
             // Եթե Admin կամ Manager է և userId տրված է, օգտագործում ենք այդ userId-ն
-            // Հակառակ դեպքում օգտագործում ենք ընթացիկ օգտատիրոջ Id-ն
+            // Հակառակ դեպքում օգտագործում ենք ընթացիக օգտատիրոջ Id-ն
             var targetUserId = (isAdmin || isManager) && !string.IsNullOrEmpty(userId) ? userId : currentUser.Id;
+
+            // Ստանում ենք թիրախային օգտատիրոջ տվյալները
+            var targetUser = await _userManager.FindByIdAsync(targetUserId);
+            if (targetUser == null)
+            {
+                return NotFound($"Օգտատերը ID-ով {targetUserId} չի գտնվել:");
+            }
+
+            // Սահմանում ենք ViewBag.UserName-ը
+            ViewBag.UserName = targetUser.UserName;
 
             DateTime date = selectedDate ?? DateTime.Today;
             var appointments = await _context.Appointments
@@ -104,17 +114,27 @@ namespace BeautySalon.Controllers
         }
 
         [HttpPost]
-        [Route("Appointments/MarkCompleted/{id}")]
-        public async Task<IActionResult> MarkCompleted(int id)
+        [Route("Appointments/ToggleCompleted/{id}")]
+        public async Task<IActionResult> ToggleCompleted(int id)
         {
             var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment != null)
+            if (appointment == null)
             {
-                appointment.IsCompleted = true;
-                await _context.SaveChangesAsync();
-                return Ok(new { success = true });
+                return NotFound();
             }
-            return NotFound();
+
+            var isAdmin = User.IsInRole("Admin");
+
+            // Եթե նշանակումը արդեն կատարված է և օգտատերը Admin չէ, ապա չենք թույլատրում փոփոխությունը
+            if (appointment.IsCompleted && !isAdmin)
+            {
+                return Forbid();
+            }
+
+            appointment.IsCompleted = !appointment.IsCompleted;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, isCompleted = appointment.IsCompleted });
         }
 
         [HttpGet]
