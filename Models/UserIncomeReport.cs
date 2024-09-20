@@ -16,6 +16,7 @@ namespace BeautySalon.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal EmployerAmount { get; set; }
         public int IncomeReportId { get; set; }
+        public int CompletedAppointments { get; set; }
         public IncomeReport IncomeReport { get; set; }
     }
 }

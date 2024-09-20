@@ -477,7 +477,6 @@
             // Ստուգում ենք, արդյոք տոկոսների գումարը 100 է
             var employerPercentage = parseFloat($('#employerPercentage').val()) || 0;
             var employeePercentage = parseFloat($('#employeePercentage').val()) || 0;
-
             if (employerPercentage + employeePercentage !== 100) {
                 alert("Տոկոսների գումարը պետք է լինի 100: Խնդրում ենք ուղղել արժեքները նախքան պահպանելը:");
                 return; // Դադարեցնում ենք ֆունկցիան, եթե տոկոսները սխալ են
@@ -491,6 +490,8 @@
                     var selectedDate = $('#datepicker').val();
                     var formattedDate = formatDateForServer(selectedDate);
                     var userId = '@ViewBag.TargetUserId';
+                    var completedAppointments = parseInt($('#completedCount').text()) || 0; // Ավելացված տող
+
                     $.ajax({
                         url: '/IncomeReport/SaveIncomeReport',
                         type: 'POST',
@@ -501,7 +502,8 @@
                             EmployeeAmount: calculatedEmployeeAmount,
                             EmployerAmount: calculatedEmployerAmount,
                             EmployeePercentage: employeePercentage,
-                            EmployerPercentage: employerPercentage
+                            EmployerPercentage: employerPercentage,
+                            CompletedAppointments: completedAppointments // Ավելացված տող
                         }),
                         success: function (data) {
                             alert('Եկամտի հաշվետվությունը հաջողությամբ պահպանվեց');

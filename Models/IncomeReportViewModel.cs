@@ -16,8 +16,8 @@ namespace BeautySalon.Models
         [Required]
         [Range(0, double.MaxValue)]
         public decimal EmployerAmount { get; set; }
-
         public decimal TotalAmount { get; set; }
+        public int CompletedAppointments { get; set; }
         public string UserId { get; set; }
     }
 }

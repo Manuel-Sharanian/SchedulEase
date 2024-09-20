@@ -16,9 +16,13 @@
             <p class="mb-1">Գործատուի մաս (Ընդհանուր)</p>
             <h4 id="totalEmployerAmount">@Model.EmployerAmount.ToString("N2") ֏</h4>
         </div>
-        <div class="amount-box employee">
+        <div class="amount-box employee mb-3">
             <p class="mb-1">Աշխատողի մաս (Ընդհանուր)</p>
             <h4 id="totalEmployeeAmount">@Model.EmployeeAmount.ToString("N2") ֏</h4>
+        </div>
+        <div class="amount-box appointments">
+            <p class="mb-1">Ընդհանուր կատարված նշանակումների քանակ</p>
+            <h4 id="totalCompletedAppointments">@Model.CompletedAppointments</h4>
         </div>
     </div>
 </div>
@@ -103,9 +107,11 @@
                         if (data) {
                             $('#totalEmployeeAmount').text((data.totalEmployeeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
                             $('#totalEmployerAmount').text((data.totalEmployerAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+                            $('#totalCompletedAppointments').text(data.totalCompletedAppointments || 0);
                         } else {
                             $('#totalEmployeeAmount').text('0.00 ֏');
                             $('#totalEmployerAmount').text('0.00 ֏');
+                            $('#totalCompletedAppointments').text('0');
                         }
                     },
                     error: function (xhr, status, error) {

@@ -37,7 +37,8 @@ namespace BeautySalon.Controllers
                 {
                     Date = selectedDate,
                     EmployeeAmount = r.TotalEmployeeAmount,
-                    EmployerAmount = r.TotalEmployerAmount
+                    EmployerAmount = r.TotalEmployerAmount,
+                    CompletedAppointments = r.TotalCompletedAppointments
                 })
                 .FirstOrDefaultAsync();
 
@@ -47,7 +48,8 @@ namespace BeautySalon.Controllers
                 {
                     Date = selectedDate,
                     EmployeeAmount = 0,
-                    EmployerAmount = 0
+                    EmployerAmount = 0,
+                    CompletedAppointments = 0
                 };
             }
 
@@ -71,13 +73,15 @@ namespace BeautySalon.Controllers
                     Date = model.Date,
                     TotalEmployeeAmount = model.EmployeeAmount,
                     TotalEmployerAmount = model.EmployerAmount,
+                    TotalCompletedAppointments = model.CompletedAppointments,
                     UserReports = new List<UserIncomeReport>
             {
                 new UserIncomeReport
                 {
                     UserId = model.UserId,
                     EmployeeAmount = model.EmployeeAmount,
-                    EmployerAmount = model.EmployerAmount
+                    EmployerAmount = model.EmployerAmount,
+                    CompletedAppointments = model.CompletedAppointments
                 }
             }
                 };
@@ -92,20 +96,28 @@ namespace BeautySalon.Controllers
                     {
                         UserId = model.UserId,
                         EmployeeAmount = model.EmployeeAmount,
-                        EmployerAmount = model.EmployerAmount
+                        EmployerAmount = model.EmployerAmount,
+                        CompletedAppointments = model.CompletedAppointments
                     };
                     existingReport.UserReports.Add(userReport);
+
                     existingReport.TotalEmployeeAmount += model.EmployeeAmount;
                     existingReport.TotalEmployerAmount += model.EmployerAmount;
+                    existingReport.TotalCompletedAppointments += model.CompletedAppointments;
                 }
                 else
                 {
                     existingReport.TotalEmployeeAmount -= userReport.EmployeeAmount;
                     existingReport.TotalEmployerAmount -= userReport.EmployerAmount;
+                    existingReport.TotalCompletedAppointments -= userReport.CompletedAppointments;
+
                     userReport.EmployeeAmount = model.EmployeeAmount;
                     userReport.EmployerAmount = model.EmployerAmount;
+                    userReport.CompletedAppointments = model.CompletedAppointments;
+
                     existingReport.TotalEmployeeAmount += model.EmployeeAmount;
                     existingReport.TotalEmployerAmount += model.EmployerAmount;
+                    existingReport.TotalCompletedAppointments += model.CompletedAppointments;
                 }
             }
 
@@ -114,7 +126,8 @@ namespace BeautySalon.Controllers
             return Json(new
             {
                 TotalEmployeeAmount = existingReport.TotalEmployeeAmount,
-                TotalEmployerAmount = existingReport.TotalEmployerAmount
+                TotalEmployerAmount = existingReport.TotalEmployerAmount,
+                TotalCompletedAppointments = existingReport.TotalCompletedAppointments
             });
         }
 
@@ -128,13 +141,14 @@ namespace BeautySalon.Controllers
                 .Select(r => new
                 {
                     TotalEmployeeAmount = r.TotalEmployeeAmount,
-                    TotalEmployerAmount = r.TotalEmployerAmount
+                    TotalEmployerAmount = r.TotalEmployerAmount,
+                    TotalCompletedAppointments = r.TotalCompletedAppointments
                 })
                 .FirstOrDefaultAsync();
 
             if (report == null)
             {
-                return Json(new { TotalEmployeeAmount = 0, TotalEmployerAmount = 0 });
+                return Json(new { TotalEmployeeAmount = 0, TotalEmployerAmount = 0, TotalCompletedAppointments = 0 });
             }
 
             return Json(report);

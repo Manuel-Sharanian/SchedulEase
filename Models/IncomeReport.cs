@@ -12,6 +12,7 @@ namespace BeautySalon.Models
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalEmployerAmount { get; set; }
+        public int TotalCompletedAppointments { get; set; }
         public List<UserIncomeReport> UserReports { get; set; } = new List<UserIncomeReport>();
     }
 }

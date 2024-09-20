@@ -108,7 +108,6 @@ namespace BeautySalon.Controllers
             ViewBag.IsAdmin = isAdmin;
             ViewBag.IsManager = isManager;
             ViewBag.TargetUserId = targetUserId;
-            //ViewBag.IsViewingOwnAppointments = isViewingOwnAppointments;
 
             return View(viewModels);
         }
@@ -639,8 +638,6 @@ namespace BeautySalon.Controllers
             return View(viewModel);
         }
 
-
-
         // GET: Appointments/Delete/5
         public async Task<IActionResult> Delete(int? id, string returnUrl)
         {
@@ -698,77 +695,6 @@ namespace BeautySalon.Controllers
         {
             return _context.Appointments.Any(e => e.Id == id);
         }
-
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> SaveIncomeReport([FromBody] IncomeReportViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var existingReport = await _context.IncomeReports
-                        .Include(r => r.UserReports)
-                        .FirstOrDefaultAsync(r => r.Date.Date == model.Date.Date);
-
-                    if (existingReport == null)
-                    {
-                        existingReport = new IncomeReport
-                        {
-                            Date = model.Date,
-                            TotalEmployeeAmount = model.EmployeeAmount,
-                            TotalEmployerAmount = model.EmployerAmount,
-                            UserReports = new List<UserIncomeReport>
-                    {
-                        new UserIncomeReport
-                        {
-                            UserId = model.UserId,
-                            EmployeeAmount = model.EmployeeAmount,
-                            EmployerAmount = model.EmployerAmount
-                        }
-                    }
-                        };
-                        _context.IncomeReports.Add(existingReport);
-                    }
-                    else
-                    {
-                        var userReport = existingReport.UserReports.FirstOrDefault(ur => ur.UserId == model.UserId);
-                        if (userReport == null)
-                        {
-                            userReport = new UserIncomeReport
-                            {
-                                UserId = model.UserId,
-                                EmployeeAmount = model.EmployeeAmount,
-                                EmployerAmount = model.EmployerAmount
-                            };
-                            existingReport.UserReports.Add(userReport);
-                        }
-                        else
-                        {
-                            userReport.EmployeeAmount = model.EmployeeAmount;
-                            userReport.EmployerAmount = model.EmployerAmount;
-                        }
-                        existingReport.TotalEmployeeAmount = existingReport.UserReports.Sum(ur => ur.EmployeeAmount);
-                        existingReport.TotalEmployerAmount = existingReport.UserReports.Sum(ur => ur.EmployerAmount);
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    return Json(new
-                    {
-                        Success = true,
-                        TotalEmployeeAmount = existingReport.TotalEmployeeAmount,
-                        TotalEmployerAmount = existingReport.TotalEmployerAmount
-                    });
-                }
-                catch (Exception ex)
-                {
-                    return Json(new { Success = false, ErrorMessage = ex.Message });
-                }
-            }
-            return Json(new { Success = false, ErrorMessage = "Invalid model state" });
-        }
-
 
         [HttpGet]
         public async Task<IActionResult> GetIncomeDistribution(DateTime date, string userId)
