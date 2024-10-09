@@ -14,6 +14,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Net.Mime.MediaTypeNames;
 using System.Security.Policy;
 using System.Xml.Linq;
+using SendGrid.Helpers.Mail;
 
 namespace BeautySalon.Controllers
 {
@@ -27,35 +28,40 @@ namespace BeautySalon.Controllers
         }
 
         [Authorize(Roles = "Admin,Manager")]
-        public async Task<IActionResult> Index(DateTime? date)
+        public async Task<IActionResult> Index(DateTime? startDate, DateTime? endDate)
         {
-            DateTime selectedDate = date ?? DateTime.Today;
-
-            var dailyReport = await _context.IncomeReports
-                .Where(r => r.Date.Date == selectedDate.Date)
-                .Select(r => new IncomeReportViewModel
-                {
-                    Date = selectedDate,
-                    EmployeeAmount = r.TotalEmployeeAmount,
-                    EmployerAmount = r.TotalEmployerAmount,
-                    CompletedAppointments = r.TotalCompletedAppointments
-                })
-                .FirstOrDefaultAsync();
-
-            if (dailyReport == null)
-            {
-                dailyReport = new IncomeReportViewModel
-                {
-                    Date = selectedDate,
-                    EmployeeAmount = 0,
-                    EmployerAmount = 0,
-                    CompletedAppointments = 0
-                };
-            }
-
-            ViewBag.SelectedDate = selectedDate;
+            DateTime start = startDate ?? DateTime.Today;
+            DateTime end = endDate ?? start;
+            var reportData = await GetReportDataAsync(start, end);
+            ViewBag.StartDate = start;
+            ViewBag.EndDate = end;
             ViewBag.IsAdmin = User.IsInRole("Admin");
-            return View(dailyReport);
+            return View(reportData);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> GetReportData(DateTime startDate, DateTime endDate)
+        {
+            var reportData = await GetReportDataAsync(startDate, endDate);
+            return Json(reportData);
+        }
+
+        private async Task<IncomeReportViewModel> GetReportDataAsync(DateTime startDate, DateTime endDate)
+        {
+            var reports = await _context.IncomeReports
+                .Where(r => r.Date.Date >= startDate.Date && r.Date.Date <= endDate.Date)
+                .ToListAsync();
+
+            return new IncomeReportViewModel
+            {
+                StartDate = startDate,
+                EndDate = endDate,
+                EmployeeAmount = reports.Sum(r => r.TotalEmployeeAmount),
+                EmployerAmount = reports.Sum(r => r.TotalEmployerAmount),
+                CompletedAppointments = reports.Sum(r => r.TotalCompletedAppointments),
+                TotalAmount = reports.Sum(r => r.TotalEmployeeAmount + r.TotalEmployerAmount)
+            };
         }
 
         [HttpPost]
@@ -131,30 +137,6 @@ namespace BeautySalon.Controllers
             });
         }
 
-
-        [HttpGet]
-        [Authorize(Roles = "Admin,Manager")]
-        public async Task<IActionResult> GetDailyTotals(DateTime date)
-        {
-            var report = await _context.IncomeReports
-                .Where(r => r.Date.Date == date.Date)
-                .Select(r => new
-                {
-                    TotalEmployeeAmount = r.TotalEmployeeAmount,
-                    TotalEmployerAmount = r.TotalEmployerAmount,
-                    TotalCompletedAppointments = r.TotalCompletedAppointments
-                })
-                .FirstOrDefaultAsync();
-
-            if (report == null)
-            {
-                return Json(new { TotalEmployeeAmount = 0, TotalEmployerAmount = 0, TotalCompletedAppointments = 0 });
-            }
-
-            return Json(report);
-        }
-
-
         [HttpGet]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> CheckUserSavedReport(string userId, DateTime date)
@@ -179,7 +161,5 @@ namespace BeautySalon.Controllers
 
             return Ok();
         }
-
-
     }
 }

@@ -2,16 +2,13 @@
 
 <div class="container">
     <h2 class="text-center page-title">Ընդհանուր Եկամտի հաշվետվություն</h2>
-     <div class="d-flex justify-content-between align-items-center">
-        <button id="prevDay" class="btn btn-outline-secondary">&lt;</button>
+    <div class="d-flex justify-content-between align-items-center">
         <div class="date-picker-container">
-            <input type="text" id="reportDate" class="form-control" style="max-width: 200px;" readonly>
-            <input type="hidden" id="reportDateHidden" value="@ViewBag.SelectedDate.ToString("yyyy-MM-dd")">
+            <input type="text" id="dateRange" class="form-control" style="max-width: 300px;" readonly>
         </div>
-        <button id="nextDay" class="btn btn-outline-secondary">&gt;</button>
-    </div> 
+    </div>
     <div class="summary-container">
-        <h4 class="text-center mb-3">Ամսաթիվ: <span id="displayDate"></span></h4>
+        <h4 class="text-center mb-3">Ժամանակահատված: <span id="displayDateRange"></span></h4>
         <div class="amount-box employer mb-3">
             <p class="mb-1">Գործատուի մաս (Ընդհանուր)</p>
             <h4 id="totalEmployerAmount">@Model.EmployerAmount.ToString("N2") ֏</h4>
@@ -20,99 +17,57 @@
             <p class="mb-1">Աշխատողի մաս (Ընդհանուր)</p>
             <h4 id="totalEmployeeAmount">@Model.EmployeeAmount.ToString("N2") ֏</h4>
         </div>
+        <div class="amount-box total mb-3">
+            <p class="mb-1">Ընդհանուր գումար</p>
+            <h4 id="totalAmount">@Model.TotalAmount.ToString("N2") ֏</h4>
+        </div>
         <div class="amount-box appointments">
             <p class="mb-1">Ընդհանուր կատարված նշանակումների քանակ</p>
             <h4 id="totalCompletedAppointments">@Model.CompletedAppointments</h4>
         </div>
     </div>
 </div>
+
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         $(document).ready(function () {
-            let isCalendarOpen = false;
-
-            $("#reportDate").datepicker({
-                dateFormat: 'dd/mm/yy',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: "-0:+1",
-                onSelect: function (dateText, inst) {
-                    var date = $(this).datepicker('getDate');
-                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
-                    $("#reportDateHidden").val(formattedDate);
-                    changeDate(formattedDate);
-                    isCalendarOpen = false;
+            var today = new Date();
+            var fp = flatpickr("#dateRange", {
+                mode: "range",
+                dateFormat: "d/m/Y",
+                defaultDate: [today, today],
+                minDate: "2024-01-01",
+                onChange: function (selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 1) {
+                        // Single day selection
+                        updateReportData(selectedDates[0], selectedDates[0]);
+                    } else if (selectedDates.length === 2) {
+                        // Date range selection
+                        updateReportData(selectedDates[0], selectedDates[1]);
+                    }
                 }
             });
 
-            $('.date-picker-container').on('click', function () {
-                if (isCalendarOpen) {
-                    $("#reportDate").datepicker("hide");
-                    isCalendarOpen = false;
-                } else {
-                    $("#reportDate").datepicker("show");
-                    isCalendarOpen = true;
-                }
-            });
+            function updateReportData(startDate, endDate) {
+                // Adjust dates to local timezone
+                var adjustedStartDate = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000);
+                var adjustedEndDate = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000);
 
-            $(document).on('click', function (e) {
-                if (!$(e.target).closest('.date-picker-container, .ui-datepicker').length) {
-                    $("#reportDate").datepicker("hide");
-                    isCalendarOpen = false;
-                }
-            });
-
-            // Set initial date
-            var initialDate = $("#reportDateHidden").val();
-            if (initialDate) {
-                $("#reportDate").datepicker("setDate", new Date(initialDate));
-                updateDisplayDate(initialDate);
-            }
-
-            $("#prevDay").on("click", function () {
-                var selectedDate = $("#reportDate").datepicker('getDate');
-                selectedDate.setDate(selectedDate.getDate() - 1);
-                $("#reportDate").datepicker("setDate", selectedDate);
-                changeDate($.datepicker.formatDate('yy-mm-dd', selectedDate));
-            });
-
-            $("#nextDay").on("click", function () {
-                var selectedDate = $("#reportDate").datepicker('getDate');
-                selectedDate.setDate(selectedDate.getDate() + 1);
-                $("#reportDate").datepicker("setDate", selectedDate);
-                changeDate($.datepicker.formatDate('yy-mm-dd', selectedDate));
-            });
-
-            function changeDate(date) {
-                updateDailyTotals(date);
-                updateDisplayDate(date);
-            }
-
-            function updateDisplayDate(date) {
-                var displayDate = new Date(date);
-                $("#displayDate").text(displayDate.toLocaleDateString('en-GB'));
-            }
-
-            function updateDailyTotals(date) {
                 $.ajax({
-                    url: '/IncomeReport/GetDailyTotals',
+                    url: '/IncomeReport/GetReportData',
                     type: 'GET',
-                    data: { date: date },
+                    data: {
+                        startDate: adjustedStartDate.toISOString(),
+                        endDate: adjustedEndDate.toISOString()
+                    },
                     success: function (data) {
-                        if (data) {
-                            $('#totalEmployeeAmount').text((data.totalEmployeeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
-                            $('#totalEmployerAmount').text((data.totalEmployerAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
-                            $('#totalCompletedAppointments').text(data.totalCompletedAppointments || 0);
-                        } else {
-                            $('#totalEmployeeAmount').text('0.00 ֏');
-                            $('#totalEmployerAmount').text('0.00 ֏');
-                            $('#totalCompletedAppointments').text('0');
-                        }
+                        $('#totalEmployeeAmount').text((data.employeeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+                        $('#totalEmployerAmount').text((data.employerAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+                        $('#totalAmount').text((data.totalAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
+                        $('#totalCompletedAppointments').text(data.completedAppointments || 0);
+                        $('#displayDateRange').text(formatDateRange(startDate, endDate));
                     },
                     error: function (xhr, status, error) {
                         alert('Սխալ տվյալները ստանալիս');
@@ -120,8 +75,15 @@
                 });
             }
 
-            // Initial update
-            updateDailyTotals(initialDate);
+            function formatDateRange(start, end) {
+                if (start.getTime() === end.getTime()) {
+                    return start.toLocaleDateString('en-GB');
+                }
+                return start.toLocaleDateString('en-GB') + ' - ' + end.toLocaleDateString('en-GB');
+            }
+
+            // Initial update with today's date
+            updateReportData(today, today);
         });
     </script>
 }
@@ -186,10 +148,16 @@
     .date-picker-container {
         position: relative;
         cursor: pointer;
+        margin: 20px auto;
     }
 
         .date-picker-container input[type="text"] {
             background-color: #fff;
             cursor: pointer;
+            text-align: center;
         }
+
+    .amount-box.total {
+        background-color: #c9e6ff;
+    }
 </style>

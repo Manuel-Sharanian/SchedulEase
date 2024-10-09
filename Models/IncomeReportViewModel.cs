@@ -8,6 +8,11 @@ namespace BeautySalon.Models
         [Required]
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime StartDate { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime EndDate { get; set; }
 
         [Required]
         [Range(0, double.MaxValue)]
