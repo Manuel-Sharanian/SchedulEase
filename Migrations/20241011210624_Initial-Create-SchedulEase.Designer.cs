@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BeautySalon.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240920215220_AddCompletedAppointmentColumnInUserIncomeReports")]
-    partial class AddCompletedAppointmentColumnInUserIncomeReports
+    [Migration("20241011210624_Initial-Create-SchedulEase")]
+    partial class InitialCreateSchedulEase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

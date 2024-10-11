@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BeautySalon.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreateSchedulEase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -75,11 +75,28 @@ namespace BeautySalon.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TotalEmployeeAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TotalEmployerAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                    TotalEmployerAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotalCompletedAppointments = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_IncomeReports", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PendingRegistrations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RegistrationDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PendingRegistrations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -225,7 +242,8 @@ namespace BeautySalon.Migrations
                     UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EmployeeAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     EmployerAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    IncomeReportId = table.Column<int>(type: "int", nullable: false)
+                    IncomeReportId = table.Column<int>(type: "int", nullable: false),
+                    CompletedAppointments = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -255,7 +273,8 @@ namespace BeautySalon.Migrations
                     CustomServiceName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Duration = table.Column<int>(type: "int", nullable: false),
                     IsCompleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsCreatedByAdmin = table.Column<bool>(type: "bit", nullable: false)
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedByUsername = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -347,6 +366,9 @@ namespace BeautySalon.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "PendingRegistrations");
 
             migrationBuilder.DropTable(
                 name: "UserIncomeReports");
