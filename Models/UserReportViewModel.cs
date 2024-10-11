@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BeautySalon.Models
 {
-    public class IncomeReportViewModel
+    public class UserReportViewModel
     {
+        public string Id { get; set; }
         [Required]
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }
@@ -13,19 +13,15 @@ namespace BeautySalon.Models
 
         [DataType(DataType.Date)]
         public DateTime EndDate { get; set; }
+        public string UserName { get; set; }
 
         [Required]
         [Range(0, double.MaxValue)]
         public decimal EmployeeAmount { get; set; }
-
         [Required]
         [Range(0, double.MaxValue)]
         public decimal EmployerAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public int CompletedAppointments { get; set; }
-        public string UserId { get; set; }
-        public List<UserReportViewModel> UserReports { get; set; } = new List<UserReportViewModel>();
-        public bool IsAdmin { get; set; }
-        public bool IsManager { get; set; }
     }
 }

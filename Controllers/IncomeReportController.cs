@@ -21,10 +21,12 @@ namespace BeautySalon.Controllers
     public class IncomeReportController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public IncomeReportController(ApplicationDbContext context)
+        public IncomeReportController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         [Authorize(Roles = "Admin,Manager")]
@@ -32,19 +34,105 @@ namespace BeautySalon.Controllers
         {
             DateTime start = startDate ?? DateTime.Today;
             DateTime end = endDate ?? start;
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
+
             var reportData = await GetReportDataAsync(start, end);
-            ViewBag.StartDate = start;
-            ViewBag.EndDate = end;
-            ViewBag.IsAdmin = User.IsInRole("Admin");
-            return View(reportData);
+            var userReports = new List<UserReportViewModel>();
+
+            if (isAdmin || isManager)
+            {
+                var users = new List<IdentityUser>();
+
+                if (isAdmin)
+                {
+                    users = (await _userManager.GetUsersInRoleAsync("User"))
+                        .Concat(await _userManager.GetUsersInRoleAsync("Admin"))
+                        .ToList();
+                }
+                else if (isManager)
+                {
+                    users = (await _userManager.GetUsersInRoleAsync("User"))
+                        .Concat(await _userManager.GetUsersInRoleAsync("Admin"))
+                        .Where(u => u.Id != currentUser.Id)  // Բացառում ենք ընթացիկ Manager-ին
+                        .ToList();
+                }
+
+                foreach (var user in users)
+                {
+                    var userReport = await GetUserReportDataAsync(user.Id, start, end);
+                    userReports.Add(userReport);
+                }
+            }
+
+            var viewModel = new IncomeReportViewModel
+            {
+                StartDate = start,
+                EndDate = end,
+                EmployeeAmount = reportData.EmployeeAmount,
+                EmployerAmount = reportData.EmployerAmount,
+                TotalAmount = reportData.TotalAmount,
+                CompletedAppointments = reportData.CompletedAppointments,
+                UserReports = userReports,
+                IsAdmin = isAdmin,
+                IsManager = isManager
+            };
+
+            return View(viewModel);
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> GetReportData(DateTime startDate, DateTime endDate)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            var isManager = await _userManager.IsInRoleAsync(currentUser, "Manager");
+
             var reportData = await GetReportDataAsync(startDate, endDate);
-            return Json(reportData);
+            var userReports = new List<UserReportViewModel>();
+
+            if (isAdmin || isManager)
+            {
+                var users = new List<IdentityUser>();
+
+                if (isAdmin)
+                {
+                    users = (await _userManager.GetUsersInRoleAsync("User"))
+                        .Concat(await _userManager.GetUsersInRoleAsync("Admin"))
+                        .ToList();
+                }
+                else if (isManager)
+                {
+                    users = (await _userManager.GetUsersInRoleAsync("User"))
+                        .Concat(await _userManager.GetUsersInRoleAsync("Admin"))
+                        .Where(u => u.Id != currentUser.Id)  // Բացառում ենք ընթացիկ Manager-ին
+                        .ToList();
+                }
+
+                foreach (var user in users)
+                {
+                    var userReport = await GetUserReportDataAsync(user.Id, startDate, endDate);
+                    userReports.Add(userReport);
+                }
+            }
+
+            var viewModel = new IncomeReportViewModel
+            {
+                StartDate = startDate,
+                EndDate = endDate,
+                EmployeeAmount = reportData.EmployeeAmount,
+                EmployerAmount = reportData.EmployerAmount,
+                TotalAmount = reportData.TotalAmount,
+                CompletedAppointments = reportData.CompletedAppointments,
+                UserReports = userReports,
+                IsAdmin = isAdmin,
+                IsManager = isManager
+            };
+
+            return Json(viewModel);
         }
 
         private async Task<IncomeReportViewModel> GetReportDataAsync(DateTime startDate, DateTime endDate)
@@ -61,6 +149,36 @@ namespace BeautySalon.Controllers
                 EmployerAmount = reports.Sum(r => r.TotalEmployerAmount),
                 CompletedAppointments = reports.Sum(r => r.TotalCompletedAppointments),
                 TotalAmount = reports.Sum(r => r.TotalEmployeeAmount + r.TotalEmployerAmount)
+            };
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> GetUserReportData(string userId, DateTime startDate, DateTime endDate)
+        {
+            var userReport = await GetUserReportDataAsync(userId, startDate, endDate);
+            return Json(userReport);
+        }
+
+        private async Task<UserReportViewModel> GetUserReportDataAsync(string userId, DateTime startDate, DateTime endDate)
+        {
+            var userReports = await _context.IncomeReports
+                .Where(r => r.UserReports.Any(ur => ur.UserId == userId) && r.Date >= startDate && r.Date <= endDate)
+                .SelectMany(r => r.UserReports.Where(ur => ur.UserId == userId))
+                .ToListAsync();
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            return new UserReportViewModel
+            {
+                Id = userId,
+                StartDate = startDate,
+                EndDate = endDate,
+                UserName = user?.UserName,
+                EmployeeAmount = userReports.Sum(r => r.EmployeeAmount),
+                EmployerAmount = userReports.Sum(r => r.EmployerAmount),
+                CompletedAppointments = userReports.Sum(r => r.CompletedAppointments),
+                TotalAmount = userReports.Sum(r => r.EmployeeAmount + r.EmployerAmount)
             };
         }
 
