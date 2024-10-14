@@ -17,6 +17,7 @@ namespace BeautySalon.Models
         [Display(Name = "Արժեք")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
+        public bool IsActive { get; set; } = true;
 
         // Many-to-one relationship
         public ICollection<Appointment>? Appointments { get; set; }

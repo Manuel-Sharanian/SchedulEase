@@ -25,7 +25,7 @@ namespace BeautySalon.Controllers
         // GET: Services
         public async Task<IActionResult> Index()
         {
-            var services = await _context.Services.ToListAsync();
+            var services = await _context.Services.Where(s => s.IsActive).ToListAsync();
             return View(services);
         }
 
@@ -33,13 +33,12 @@ namespace BeautySalon.Controllers
         public async Task<IActionResult> Search(string searchString)
         {
             var services = from s in _context.Services
+                           where s.IsActive
                            select s;
-
             if (!String.IsNullOrEmpty(searchString))
             {
                 services = services.Where(s => s.ServiceName.Contains(searchString));
             }
-
             return PartialView("_ServiceList", await services.ToListAsync());
         }
 
@@ -134,14 +133,27 @@ namespace BeautySalon.Controllers
             return View(service);
         }
 
-        // POST: Services/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var service = await _context.Services.FindAsync(id);
-            if (service != null)
+            if (service == null)
             {
+                return NotFound();
+            }
+
+            // Ստուգում ենք, արդյոք կան կապված նշանակումներ
+            var hasAppointments = await _context.Appointments.AnyAsync(a => a.ServiceId == id);
+
+            if (hasAppointments)
+            {
+                // Եթե կան կապված նշանակումներ, պարզապես թարմացնում ենք IsActive-ը
+                service.IsActive = false;
+            }
+            else
+            {
+                // Եթե չկան կապված նշանակումներ, ջնջում ենք ծառայությունը
                 _context.Services.Remove(service);
             }
 

@@ -435,8 +435,11 @@ namespace BeautySalon.Controllers
         [HttpGet]
         public IActionResult GetAllServices()
         {
-            var services = _context.Services.Select(s => new { id = s.Id, serviceName = s.ServiceName, price = s.Price }).ToList();
-            return Json(services);
+            var activeServices = _context.Services
+                .Where(s => s.IsActive)
+                .Select(s => new { id = s.Id, serviceName = s.ServiceName })
+                .ToList();
+            return Json(activeServices);
         }
 
         [HttpPost]
