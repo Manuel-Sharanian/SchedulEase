@@ -1,4 +1,5 @@
 ﻿@model List<Microsoft.AspNetCore.Identity.IdentityUser>
+@using System.Linq;
 @{
     ViewData["Title"] = "Գլխավոր էջ";
 }
@@ -25,7 +26,7 @@
                 <div class="col-md-3 mb-4">
                     <a href="#" class="service-window-link" data-userid="@user.Id">
                         <div class="service-window animated-window" id="service-@user.Id">
-                            <h3 class="user-name">@user.UserName</h3>
+                            <h3 class="user-name">@(string.Concat(user.UserName.Select((c, i) => i == 0 || (i > 0 && user.UserName[i - 1] == ' ') ? char.ToUpper(c) : char.ToLower(c))))</h3>
                             <div class="sub-windows">
                                 <div class="sub-window calendar">
                                     <h3>Գրանցումներ</h3>
@@ -252,7 +253,6 @@
             color: #333;
             margin-bottom: 1rem;
             text-align: center;
-            text-transform: uppercase;
             letter-spacing: 1px;
             position: relative;
             z-index: 1;

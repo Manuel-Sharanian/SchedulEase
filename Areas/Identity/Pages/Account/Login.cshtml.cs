@@ -65,16 +65,18 @@ namespace BeautySalon.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [EmailAddress]
+            [Required(ErrorMessage = "Էլ․ փոստը պարտադիր է")]
+            [EmailAddress(ErrorMessage = "Անվավեր էլ․ փոստի հասցե")]
             public string Email { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
+            [Required(ErrorMessage = "Գաղտնաբառը պարտադիր է")]
+            [StringLength(100, ErrorMessage = "{0}-ը պետք է լինի առնվազն {2} և առավելագույնը {1} նիշ երկարությամբ:", MinimumLength = 6)]
             [DataType(DataType.Password)]
+            [Display(Name = "Գաղտնաբառ")]
             public string Password { get; set; }
 
             /// <summary>

@@ -50,6 +50,7 @@ public class AdminController : Controller
             PasswordHash = pendingRegistration.PasswordHash
         };
 
+
         var result = await _userManager.CreateAsync(user);
 
         if (result.Succeeded)

@@ -88,27 +88,28 @@ namespace BeautySalon.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "Անունը պարտադիր է")]
             [Display(Name = "Full Name")]
-            [RegularExpression(@"^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$", ErrorMessage = "Full Name can only contain letters, spaces, and characters: ' , . -")]
+            [RegularExpression(@"^[a-zA-ZԱ-Ֆա-ֆ]+(([',. -][a-zA-ZԱ-Ֆա-ֆ ])?[a-zA-ZԱ-Ֆա-ֆ]*)*$", ErrorMessage = "Անուն Ազգանունը կարող է պարունակել միայն տառեր և բացատներ")]
             public string FullName { get; set; }
 
-            [Required]
-            [EmailAddress]
+            [Required(ErrorMessage = "Էլ․ փոստը պարտադիր է")]
+            [EmailAddress(ErrorMessage = "Անվավեր էլ․ փոստի հասցե")]
             [Display(Name = "Email")]
             public string Email { get; set; }
 
-            [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [Required(ErrorMessage = "Գաղտնաբառը պարտադիր է")]
+            [StringLength(100, ErrorMessage = "{0}-ը պետք է լինի առնվազն {2} և առավելագույնը {1} նիշ երկարությամբ:", MinimumLength = 6)]
             [DataType(DataType.Password)]
-            [Display(Name = "Password")]
+            [Display(Name = "Գաղտնաբառ")]
             public string Password { get; set; }
 
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
+            [Display(Name = "Հաստատել գաղտնաբառը")]
             [Compare("Password", ErrorMessage = "Գաղտնաբառերը չեն համընկնում.")]
             public string ConfirmPassword { get; set; }
         }
+
 
 
         public async Task OnGetAsync(string returnUrl = null)
