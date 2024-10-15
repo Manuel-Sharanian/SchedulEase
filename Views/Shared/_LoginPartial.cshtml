@@ -2,67 +2,37 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-<ul class="navbar-nav">
-    @if (SignInManager.IsSignedIn(User))
-    {
-        <!-- Dropdown menu for larger screens -->
-        <li class="nav-item dropdown d-none d-md-block">
-            <a class="nav-link dropdown-toggle user-greeting" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Բարև @User.Identity?.Name! <span class="dropdown-arrow">&#9660;</span>
+@if (SignInManager.IsSignedIn(User))
+{
+    <ul class="navbar-nav login-partial">
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                <i class="fas fa-cog"></i> Կարգավորումներ
             </a>
-            <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Կարգավորումներ</a></li>
-                <li>
-                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                        <button type="submit" class="dropdown-item">Դուրս գալ</button>
-                    </form>
-                </li>
-            </ul>
         </li>
-
-        <!-- Direct links for small screens -->
-        <li class="nav-item d-block d-md-none">
-            <a class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Կարգավորումներ</a>
-        </li>
-        <li class="nav-item d-block d-md-none">
+        <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="nav-link btn-logout">Դուրս գալ</button>
+                <button type="submit" class="nav-link btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Ելք
+                </button>
             </form>
         </li>
-    }
-    else
-    {
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Գրանցում</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Մուտք</a>
-        </li>
-    }
-</ul>
-
-
-
-<style>
-@@media (max-width: 767px) {
-    .navbar-nav .dropdown-menu {
-        position: static;
-        float: none;
-        width: auto;
-        margin-top: 0;
-        background-color: transparent;
-        border: 0;
-        box-shadow: none;
-    }
-    
-    .navbar-nav .dropdown-item {
-        padding: 0.25rem 1.5rem;
-    }
-    
-    .navbar-nav .dropdown-item:hover,
-    .navbar-nav .dropdown-item:focus {
-        background-color: transparent;
-    }
+    </ul>
 }
-</style>
+else
+{
+    <ul class="navbar-nav login-partial">
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
+                <i class="fas fa-user-plus"></i> Գրանցում
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">
+                <i class="fas fa-sign-in-alt"></i> Մուտք
+            </a>
+        </li>
+    </ul>
+}

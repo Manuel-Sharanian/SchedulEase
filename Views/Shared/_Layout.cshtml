@@ -11,81 +11,111 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3 fixed-top-custom">
-            <div class="container-fluid">
-                <!-- Logo on the left -->
-                <div class="navbar-brand-container">
-                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">SchedulEase</a>
-                </div>
-
-                <!-- Navbar toggler for mobile view -->
-                <div class="navbar-toggler-container">
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                            aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                </div>
-
-                <!-- Navbar links on the right -->
-                <div class="collapse navbar-collapse justify-content-end">
-                    <ul class="navbar-nav">
-@*                         @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Clients" asp-action="index">Հաճախորդներ</a>
-                            </li>
-                        } *@
-                        @if (!User.IsInRole("Manager"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Appointments" asp-action="index">Գրանցումներ</a>
-                            </li>
-                        }
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Services" asp-action="index">Ծառայություններ</a>
-                        </li>
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="index">Օգտատերեր</a>
-                            </li>
-                        }
-                        @if (User.IsInRole("Manager"))
-                        {
-                            <li class="nav-item">
-                                <a asp-controller="IncomeReport" asp-action="Index" class="nav-link">Եկամտի հաշվետվություն</a>
-                            </li>
-                        }
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
+        <nav class="navbar fixed-top-custom">
+            <div class="container-fluid px-3">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    SchedulEase
+                    <svg class="arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L12 22M12 2L16 6M12 2L8 6M12 2L20 10M12 2L4 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+                <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
             </div>
         </nav>
-
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <button class="close-sidebar d-md-none">&larr;</button>
+            <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                SchedulEase
+                <svg class="arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L12 22M12 2L16 6M12 2L8 6M12 2L20 10M12 2L4 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+        </div>
+        <div class="sidebar-content">
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="user-greeting">
+                    <i class="fas fa-hand-wave"></i> Բարև @User.Identity?.Name!
+                </div>
+            }
+            <ul class="nav flex-column main-nav">
+                 @*             @if (User.IsInRole("Admin"))
+                {
+                <li class="nav-item">
+                <a class="nav-link" asp-controller="Clients" asp-action="index">Հաճախորդներ</a>
+                </li>
+                } *@
+                @if (!User.IsInRole("Manager"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Appointments" asp-action="index">
+                            <i class="fas fa-calendar-check"></i> <span>Իմ Գրանցումները</span>
+                        </a>
+                    </li>
+                }
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Services" asp-action="index">
+                        <i class="fas fa-cut"></i> <span>Ծառայություններ</span>
+                    </a>
+                </li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Admin" asp-action="index">
+                            <i class="fas fa-users"></i> <span>Օգտատերեր</span>
+                        </a>
+                    </li>
+                }
+                @if (User.IsInRole("Manager"))
+                {
+                    <li class="nav-item">
+                        <a asp-controller="IncomeReport" asp-action="Index" class="nav-link">
+                            <i class="fas fa-chart-line"></i> <span>Եկամտի հաշվետվություն</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+            <partial name="_LoginPartial" />
+        </div>
     </div>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="container">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <div class="overlay"></div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         $(document).ready(function () {
             var $navbarToggler = $('.navbar-toggler');
-            var $navbarCollapse = $('.navbar-collapse');
+            var $sidebar = $('.sidebar');
+            var $overlay = $('.overlay');
+            var $body = $('body');
+            var $closeSidebar = $('.close-sidebar');
 
             function toggleMenu() {
-                var isExpanded = $navbarCollapse.hasClass('show');
-                $navbarCollapse.collapse(isExpanded ? 'hide' : 'show');
                 $navbarToggler.toggleClass('is-active');
-                $navbarToggler.attr('aria-expanded', !isExpanded);
+                $sidebar.toggleClass('active');
+                $overlay.toggleClass('active');
+                $body.toggleClass('sidebar-active');
             }
 
             $navbarToggler.on('click', function (e) {
@@ -93,57 +123,12 @@
                 toggleMenu();
             });
 
-            // Փակել մենյուն էջի այլ մասում սեղմելիս
-            $(document).on('click', function (e) {
-                if (!$(e.target).closest('.navbar').length) {
-                    $navbarCollapse.collapse('hide');
-                    $navbarToggler.removeClass('is-active');
-                    $navbarToggler.attr('aria-expanded', 'false');
-                }
+            $overlay.on('click', function () {
+                toggleMenu();
             });
 
-            $navbarToggler.removeClass('is-active');
-            $navbarToggler.attr('aria-expanded', 'false');
-        });
-
-
-        let lastScrollTop = 0;
-        const navbar = document.querySelector('.navbar');
-        const navbarHeight = navbar.offsetHeight;
-
-        window.addEventListener('scroll', function () {
-            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-            if (scrollTop > lastScrollTop) {
-                // Scroll Down
-                navbar.style.top = `-${navbarHeight}px`;
-            } else {
-                // Scroll Up
-                navbar.style.top = '20px';
-            }
-
-            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-        }, false);
-
-        // նավբարի "Բարև User!" մաս.
-        document.addEventListener('DOMContentLoaded', function () {
-            var dropdowns = document.querySelectorAll('.nav-item.dropdown');
-
-            dropdowns.forEach(function (dropdown) {
-                dropdown.addEventListener('mouseenter', function () {
-                    this.querySelector('.dropdown-menu').style.display = 'block';
-                    setTimeout(() => {
-                        this.querySelector('.dropdown-menu').style.opacity = '1';
-                    }, 10);
-                });
-
-                dropdown.addEventListener('mouseleave', function () {
-                    var dropdownMenu = this.querySelector('.dropdown-menu');
-                    dropdownMenu.style.opacity = '0';
-                    setTimeout(() => {
-                        dropdownMenu.style.display = 'none';
-                    }, 500);
-                });
+            $closeSidebar.on('click', function () {
+                toggleMenu();
             });
         });
     </script>
