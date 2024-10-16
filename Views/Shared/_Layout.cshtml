@@ -17,17 +17,22 @@
     <header>
         <nav class="navbar fixed-top-custom">
             <div class="container-fluid px-3">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    SchedulEase
-                    <svg class="arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L12 22M12 2L16 6M12 2L8 6M12 2L20 10M12 2L4 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </a>
-                <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
+                <div class="w-100 d-flex justify-content-between align-items-center">
+                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                        SchedulEase
+                        <svg class="arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L12 22M12 2L16 6M12 2L8 6M12 2L20 10M12 2L4 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                    }
+                </div>
             </div>
         </nav>
     </header>
@@ -106,30 +111,35 @@
     <script>
         $(document).ready(function () {
             var $navbarToggler = $('.navbar-toggler');
-            var $sidebar = $('.sidebar');
-            var $overlay = $('.overlay');
-            var $body = $('body');
-            var $closeSidebar = $('.close-sidebar');
+            if ($navbarToggler.length > 0) {  // Ստուգում ենք, արդյոք Hamburger Icon-ը գոյություն ունի
+                var $sidebar = $('.sidebar');
+                var $overlay = $('.overlay');
+                var $body = $('body');
+                var $closeSidebar = $('.close-sidebar');
 
-            function toggleMenu() {
-                $navbarToggler.toggleClass('is-active');
-                $sidebar.toggleClass('active');
-                $overlay.toggleClass('active');
-                $body.toggleClass('sidebar-active');
+                function toggleMenu() {
+                    $navbarToggler.toggleClass('is-active');
+                    $sidebar.toggleClass('active');
+                    $overlay.toggleClass('active');
+                    $body.toggleClass('sidebar-active');
+                }
+
+                $navbarToggler.on('click', function (e) {
+                    e.preventDefault();
+                    toggleMenu();
+                });
+
+                $overlay.on('click', function () {
+                    toggleMenu();
+                });
+
+                $closeSidebar.on('click', function () {
+                    toggleMenu();
+                });
             }
-
-            $navbarToggler.on('click', function (e) {
-                e.preventDefault();
-                toggleMenu();
-            });
-
-            $overlay.on('click', function () {
-                toggleMenu();
-            });
-
-            $closeSidebar.on('click', function () {
-                toggleMenu();
-            });
+                    if (@User.Identity.IsAuthenticated.ToString().ToLower()) {
+                $('body').addClass('user-authenticated');
+                }
         });
     </script>
 

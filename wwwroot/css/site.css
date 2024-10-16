@@ -23,6 +23,12 @@ body {
     height: 75px;
 }
 
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
 .navbar-brand, .sidebar-brand {
     margin-right: 0;
     padding: 0;
@@ -35,6 +41,14 @@ body {
     display: flex;
     align-items: center;
     text-decoration: none;
+}
+
+@media (max-width: 767.98px) {
+    body:not(.user-authenticated) .navbar-brand {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 }
 
     .navbar-brand:hover, .sidebar-brand:hover {
@@ -54,6 +68,8 @@ body {
 }
 
 .navbar .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
