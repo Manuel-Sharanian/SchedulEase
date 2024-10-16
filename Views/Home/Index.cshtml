@@ -1,4 +1,4 @@
-﻿@model List<Microsoft.AspNetCore.Identity.IdentityUser>
+﻿@model List<UserDashboardViewModel>
 @using System.Linq;
 @{
     ViewData["Title"] = "Գլխավոր էջ";
@@ -9,13 +9,11 @@
         <div class="col-md-12 mb-4">
             <div class="date-picker-row">
                 <div class="date-picker-container">
-                    <h3 class="text-center mb-3">Ընտրեք ամսաթիվը</h3>
+                    <h3 class="text-center mb-3 date-picker-title">Ընտրեք ամսաթիվը</h3>
                     <div class="date-picker-wrapper">
-                        <button id="prevDay" class="btn btn-secondary">&lt;</button>
-                        <input type="text" id="reportDate" class="form-control" readonly>
-                        <button id="nextDay" class="btn btn-secondary">&gt;</button>
+                        <div id="inline-calendar"></div>
                     </div>
-                    <input type="hidden" id="reportDateHidden" value="@DateTime.Now.ToString("dd-MM-yyyy")">
+                    <input type="hidden" id="reportDateHidden" value="@ViewBag.SelectedDate.ToString("yyyy-MM-dd")">
                 </div>
             </div>
         </div>
@@ -24,12 +22,15 @@
             foreach (var user in Model)
             {
                 <div class="col-md-3 mb-4">
-                    <a href="#" class="service-window-link" data-userid="@user.Id">
-                        <div class="service-window animated-window" id="service-@user.Id">
+                    <a href="#" class="service-window-link" data-userid="@user.UserId">
+                        <div class="service-window animated-window @(user.HasIncomeReport ? "has-income-report" : "")" id="service-@user.UserId">
                             <h3 class="user-name">@(string.Concat(user.UserName.Select((c, i) => i == 0 || (i > 0 && user.UserName[i - 1] == ' ') ? char.ToUpper(c) : char.ToLower(c))))</h3>
                             <div class="sub-windows">
                                 <div class="sub-window calendar">
                                     <h3>Գրանցումներ</h3>
+                                </div>
+                                <div class="sub-window appointments-count">
+                                    <h3>Կատարված գրանցումներ: @user.CompletedAppointmentsCount</h3>
                                 </div>
                             </div>
                         </div>
@@ -43,82 +44,30 @@
 @section Scripts
 {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/hy.js"></script>
     <script>
         $(document).ready(function () {
-            // Set current date on page load
             var today = new Date();
-            $("#reportDate").datepicker("setDate", today);
-            var formattedDate = $.datepicker.formatDate('yy-mm-dd', today);
-            $("#reportDateHidden").val(formattedDate);
-            updateLinks(formattedDate);
+            var formattedToday = formatDate(today);
+            var selectedDate = $('#reportDateHidden').val();
 
-
-            let isCalendarOpen = false;
-
-            $("#reportDate").datepicker({
-                dateFormat: 'dd/mm/yy',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: "-0:+1",
-                onSelect: function (dateText, inst) {
-                    var date = $(this).datepicker('getDate');
-                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
-                    $("#reportDateHidden").val(formattedDate);
-                    updateLinks(formattedDate);
-                    isCalendarOpen = false;
+            var calendar = flatpickr("#inline-calendar", {
+                inline: true,
+                defaultDate: selectedDate,
+                dateFormat: "Y-m-d",
+                locale: "hy",
+                onChange: function (selectedDates, dateStr, instance) {
+                    window.location.href = '@Url.Action("Index", "Home")' + '?selectedDate=' + dateStr;
                 }
             });
 
-            function changeDate(days) {
-                var currentDate = $("#reportDate").datepicker('getDate');
-                currentDate.setDate(currentDate.getDate() + days);
-                $("#reportDate").datepicker("setDate", currentDate);
-                var formattedDate = $.datepicker.formatDate('yy-mm-dd', currentDate);
-                $("#reportDateHidden").val(formattedDate);
-                updateLinks(formattedDate);
-            }
+            // Open calendar on page load
+            calendar.open();
 
-            $('.date-picker-container').on('click', function () {
-                if (isCalendarOpen) {
-                    $("#reportDate").datepicker("hide");
-                    isCalendarOpen = false;
-                } else {
-                    $("#reportDate").datepicker("show");
-                    isCalendarOpen = true;
-                }
-            });
-
-            $(document).on('click', function (e) {
-                if (!$(e.target).closest('.date-picker-container, .ui-datepicker').length) {
-                    $("#reportDate").datepicker("hide");
-                    isCalendarOpen = false;
-                }
-            });
-
-            // Set initial date
-            var initialDate = $("#reportDateHidden").val();
-            if (initialDate) {
-                $("#reportDate").datepicker("setDate", new Date(initialDate));
-                updateLinks(initialDate);
-            }
-
-            $("#prevDay").on("click", function (e) {
-                e.stopPropagation(); // Կանխում ենք իրադարձության տարածումը
-                var selectedDate = $("#reportDate").datepicker('getDate');
-                selectedDate.setDate(selectedDate.getDate() - 1);
-                $("#reportDate").datepicker("setDate", selectedDate);
-                updateLinks($.datepicker.formatDate('yy-mm-dd', selectedDate));
-            });
-
-            $("#nextDay").on("click", function (e) {
-                e.stopPropagation(); // Կանխում ենք իրադարձության տարածումը
-                var selectedDate = $("#reportDate").datepicker('getDate');
-                selectedDate.setDate(selectedDate.getDate() + 1);
-                $("#reportDate").datepicker("setDate", selectedDate);
-                updateLinks($.datepicker.formatDate('yy-mm-dd', selectedDate));
-            });
+            // Update links with today's date on page load
+            updateLinks(formattedToday);
 
             function updateLinks(date) {
                 $('.service-window-link').each(function () {
@@ -126,6 +75,20 @@
                     var newHref = '@Url.Action("Index", "Appointments")' + '?userId=' + userId + '&selectedDate=' + date;
                     $(this).attr('href', newHref);
                 });
+            }
+
+            function formatDate(date) {
+                var d = new Date(date),
+                    month = '' + (d.getMonth() + 1),
+                    day = '' + d.getDate(),
+                    year = d.getFullYear();
+
+                if (month.length < 2)
+                    month = '0' + month;
+                if (day.length < 2)
+                    day = '0' + day;
+
+                return [year, month, day].join('-');
             }
 
             setTimeout(animateWindows, 500);
@@ -151,58 +114,59 @@
     </script>
 
 
-
-
-
     <style>
-        .container {
-            margin-top: 2rem;
-        }
-
-        .date-picker-row {
-            display: flex;
-            justify-content: flex-start;
-            width: 100%;
-            margin-bottom: 2rem;
-        }
-
-        .date-picker-container {
-            background-color: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            width: 350px;
-        }
-
-        .date-picker-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #reportDate {
-            width: 140px;
-            text-align: center;
-            font-size: 1.1rem;
-            margin: 0 0.5rem;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            padding: 0.5rem;
-        }
-
-        #prevDay, #nextDay {
-            font-size: 1.1rem;
-            padding: 0.5rem 1rem;
-            background-color: #6c757d;
-            border-color: #6c757d;
+        /* Dark Gray Flatpickr Design */
+        .flatpickr-calendar {
+            background-color: #2d2d2d;
             color: white;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto;
         }
 
-            #prevDay:hover, #nextDay:hover {
-                background-color: #5a6268;
-                border-color: #545b62;
+        .flatpickr-day {
+            background-color: #2d2d2d;
+            color: white;
+            border-radius: 50%;
+        }
+
+            .flatpickr-day:hover {
+                background-color: #3a3a3a;
+            }
+
+            .flatpickr-day.selected {
+                background-color: #4a4a4a;
+                border-color: #4a4a4a;
+            }
+
+        .flatpickr-months, .flatpickr-current-month {
+            background-color: #2d2d2d;
+        }
+
+            .flatpickr-current-month .flatpickr-monthDropdown-months {
+                background-color: #2d2d2d;
+                color: white;
+            }
+
+            .flatpickr-current-month input.cur-year {
+                color: white;
+            }
+
+        .numInputWrapper span.arrowUp,
+        .numInputWrapper span.arrowDown {
+            border-color: white transparent;
+        }
+
+        .date-picker-title {
+            color: #a9a9a9; /* Բաց մոխրագույն */
+            transition: color 0.3s ease;
+        }
+
+            .date-picker-title:hover {
+                color: #4a4a4a; /* Մուգ մոխրագույն */
             }
 
         .service-window-link {
@@ -306,37 +270,35 @@
                 transform: translateY(0);
             }
 
-        /* Թարմացված jQuery UI DatePicker ոճեր */
-        .ui-datepicker {
-            font-size: 1rem;
-            padding: 0.5rem;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .service-window.has-income-report {
+        background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
         }
 
-        .ui-datepicker-header {
-            background-color: #f8f9fa;
+        .service-window.has-income-report .user-name,
+        .service-window.has-income-report .sub-window h3 {
+            color: #ffffff;
+        }
+
+        .sub-window.appointments-count {
+            background: linear-gradient(135deg, #4a4a4a 0%, #2d2d2d 100%);
+            padding: 1.2rem;
             border: none;
-            border-radius: 10px 10px 0 0;
+            margin-top: 0.5rem;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .ui-datepicker-calendar {
-            background-color: white;
+        .sub-window.appointments-count h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #ffffff;
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
-
-        .ui-datepicker-title {
-            color: #333;
-        }
-
-        .ui-datepicker-prev, .ui-datepicker-next {
-            background: none;
-            border: none;
-            color: #6c757d;
-        }
-
-            .ui-datepicker-prev:hover, .ui-datepicker-next:hover {
-                background-color: #e9ecef;
-                color: #495057;
-            }
     </style>
 }
