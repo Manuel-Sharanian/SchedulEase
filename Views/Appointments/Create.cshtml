@@ -8,9 +8,10 @@
     ViewData["Title"] = @userName;
 }
 
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-<h2 style="color: #4a4a4a;">Նոր Գրանցում - @ViewBag.UserName</h2>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hy.js"></script>
+<h2 style="color: #c8c8c8;">Նոր Գրանցում - @ViewBag.UserName</h2>
 
 <form asp-action="Create" asp-route-userId="@ViewBag.UserId">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -30,8 +31,8 @@
     <div class="form-group date-picker-wrapper">
         <label asp-for="AppointmentDate" style="color: #ffffff;">Գրանցման Օր</label>
         <div class="date-picker-container">
-            <input id="appointment-date-display" class="form-control bg-light-grey clickable-field" type="text" readonly value="@(ViewBag.SelectedDate?.ToString("dd/MM/yyyy") ?? DateTime.Now.ToString("dd/MM/yyyy"))" />
-            <input asp-for="AppointmentDate" id="appointment-date-picker" type="hidden" value="@(ViewBag.SelectedDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" />
+            <input id="appointment-date-display" class="form-control bg-dark-gray clickable-field" type="text" />
+            <input asp-for="AppointmentDate" id="appointment-date-picker" type="hidden" />
         </div>
         <span asp-validation-for="AppointmentDate" class="text-danger"></span>
     </div>
@@ -97,26 +98,20 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
         $(document).ready(function () {
-            $("#appointment-date-display").datepicker({
-                dateFormat: 'dd/mm/yy',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: "-0:+1",
-                beforeShow: function (input, inst) {
-                    setTimeout(function () {
-                        inst.dpDiv.css({
-                            top: $(".date-picker-container").offset().top + $(".date-picker-container").outerHeight(),
-                            left: $(".date-picker-container").offset().left
-                        });
-                    }, 0);
-                },
-                onSelect: function (dateText, inst) {
-                    // Փոխակերպում ենք ընտրված ամսաթիվը սերվերի ֆորմատի
-                    var date = $(this).datepicker('getDate');
-                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
-                    $("#appointment-date-picker").val(formattedDate);
+            flatpickr("#appointment-date-display", {
+                locale: "hy",
+                dateFormat: "d/m/Y",
+                defaultDate: "{{ ViewBag.SelectedDate?.ToString('dd/MM/yyyy') ?? DateTime.Now.ToString('dd/MM/yyyy') }}",
+                onChange: function (selectedDates, dateStr, instance) {
+                    // Update hidden field with the selected date in 'yyyy-mm-dd' format
+                    var selectedDate = instance.formatDate(selectedDates[0], 'Y-m-d');
+                    $("#appointment-date-picker").val(selectedDate);
                 }
             });
+
+            // Handle pre-selected date from URL or ViewBag
+            var selectedDate = "@(ViewBag.SelectedDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))";
+            $("#appointment-date-picker").val(selectedDate);
 
             var urlParams = new URLSearchParams(window.location.search);
             var date = urlParams.get('date');
@@ -130,7 +125,6 @@
             if (time) {
                 $("#AppointmentHour").val(time);
             }
-
 
             var serviceList = $("#serviceList");
             var serviceSearch = $("#serviceSearch");
@@ -223,6 +217,67 @@
 }
 
 <style>
+/* Flatpickr custom styles */
+    .flatpickr-calendar {
+        background: #333;
+        border-color: #555;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .flatpickr-day {
+        color: #fff;
+    }
+
+        .flatpickr-day.selected {
+            background: #4a4a4a;
+            border-color: #4a4a4a;
+        }
+
+        .flatpickr-day:hover {
+            background: #555;
+        }
+
+    .flatpickr-current-month {
+        color: #fff;
+    }
+
+    .flatpickr-weekday {
+        color: #ccc;
+    }
+
+    /* Ամիսների վերնամասի ոճեր */
+    .flatpickr-months, .flatpickr-weekdays {
+        background: #333 !important;
+    }
+
+    .flatpickr-month, .flatpickr-weekday {
+        color: #fff !important;
+        fill: #fff !important;
+    }
+
+    /* Ամիսների ցանկի ոճեր */
+    .flatpickr-monthDropdown-months {
+        background: #333 !important;
+        color: #fff !important;
+        height: 24px !important;
+    }
+
+    /* Ամիսների ցանկի տարբերակների ոճեր */
+    .flatpickr-monthDropdown-month {
+        background-color: #404040 !important;
+        color: #fff !important;
+    }
+
+        /* Ամիսների ցանկի hover էֆեկտ */
+        .flatpickr-monthDropdown-month:hover {
+            background-color: #505050 !important;
+        }
+
+        /* Ընտրված ամսվա ոճ */
+        .flatpickr-monthDropdown-month.selected {
+            background-color: #666 !important;
+        }
+
     body {
         background-color: #f2f2f2;
         color: #ffffff;

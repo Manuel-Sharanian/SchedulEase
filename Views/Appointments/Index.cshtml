@@ -71,7 +71,7 @@
                                 var appointment = appointments.First();
                                 var rowspan = (int)Math.Ceiling(appointment.Appointment.Duration / 30.0);
                                 appointmentCounter++;
-                                var backgroundColor = appointmentCounter % 2 == 0 ? "#adebad" : "#b3d9ff";
+                                var backgroundColor = appointmentCounter % 2 == 0 ? "#bababa" : "#e0e0e0";
                                 <td style="background-color: @backgroundColor;" rowspan="@rowspan">
                                     @if (appointment.CreatedByUserId != appointment.UserId)
                                     {
@@ -254,6 +254,30 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+        const armenianLocale = {
+        weekdays: {
+            shorthand: ['Կիր', 'Երկ', 'Երք', 'Չոր', 'Հնգ', 'Ուրբ', 'Շբթ'],
+            longhand: ['Կիրակի', 'Երկուշաբթի', 'Երեքշաբթի', 'Չորեքշաբթի', 'Հինգշաբթի', 'Ուրբաթ', 'Շաբաթ']
+        },
+        months: {
+            shorthand: ['Հնվ', 'Փտվ', 'Մրտ', 'Ապր', 'Մյս', 'Հնս', 'Հլս', 'Օգս', 'Սպտ', 'Հկտ', 'Նմբ', 'Դկտ'],
+            longhand: ['Հունվար', 'Փետրվար', 'Մարտ', 'Ապրիլ', 'Մայիս', 'Հունիս', 'Հուլիս', 'Օգոստոս', 'Սեպտեմբեր', 'Հոկտեմբեր', 'Նոյեմբեր', 'Դեկտեմբեր']
+        },
+        firstDayOfWeek: 1,
+        ordinal: function () {
+            return "";
+        },
+        rangeSeparator: ' — ',
+        weekAbbreviation: 'Շբթ.',
+        scrollTitle: 'Ոլորեք՝ մեծացնելու համար',
+        toggleTitle: 'Սեղմեք՝ փոխելու համար',
+        amPM: ['ԿԱ', 'ԿՀ'],
+        yearAriaLabel: 'Տարի',
+        monthAriaLabel: 'Ամիս',
+        hourAriaLabel: 'Ժամ',
+        minuteAriaLabel: 'Րոպե'
+    };
+
     function initFlatpickr(elementId, prevButtonId, nextButtonId) {
         var fp = flatpickr(elementId, {
             dateFormat: "d/m/Y",
@@ -265,6 +289,10 @@
             enableTime: false,
             allowInput: false,
             clickOpens: true,
+            locale: armenianLocale,
+            theme: "custom-gray",
+            nextArrow: '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M8.59 16.59L13.17 12L8.59 7.41L10 6l6 6l-6 6l-1.41-1.41z"/></svg>', 
+            prevArrow: '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6l6 6l1.41-1.41z"/></svg>'
         });
 
         document.getElementById(prevButtonId).addEventListener('click', function () {
@@ -790,6 +818,131 @@
 
 
 <style>
+        /* Հիմնական օրացույցի ոճեր */
+    .flatpickr-calendar {
+        background: #404040 !important;
+        color: #fff !important;
+        border: 1px solid #333 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    }
+
+    /* Ամիսների վերնամասի ոճեր */
+    .flatpickr-months, .flatpickr-weekdays {
+        background: #333 !important;
+    }
+
+    .flatpickr-month, .flatpickr-weekday {
+        color: #fff !important;
+        fill: #fff !important;
+    }
+
+    /* Ամիսների ցանկի ոճեր */
+    .flatpickr-monthDropdown-months {
+        background: #333 !important;
+        color: #fff !important;
+        height: 24px !important;
+    }
+
+    /* Ամիսների ցանկի տարբերակների ոճեր */
+    .flatpickr-monthDropdown-month {
+        background-color: #404040 !important;
+        color: #fff !important;
+    }
+
+    /* Ամիսների ցանկի hover էֆեկտ */
+    .flatpickr-monthDropdown-month:hover {
+        background-color: #505050 !important;
+    }
+
+    /* Ընտրված ամսվա ոճ */
+    .flatpickr-monthDropdown-month.selected {
+        background-color: #666 !important;
+    }
+
+    /* Տարեթվի input-ի ոճեր */
+    .numInput.cur-year {
+        color: #fff !important;
+        background: transparent !important;
+    }
+
+    .numInputWrapper:hover {
+        background: transparent !important;
+    }
+
+    /* Օրերի ոճեր */
+    .flatpickr-day {
+        color: #fff !important;
+        background: #404040 !important;
+    }
+
+    .flatpickr-day:hover {
+        background: #505050 !important;
+    }
+
+    .flatpickr-day.selected {
+        background: #666 !important;
+        border-color: #666 !important;
+    }
+
+    .flatpickr-day.today {
+        border-color: #808080 !important;
+    }
+
+    .flatpickr-day.disabled {
+        color: #666 !important;
+    }
+
+    /* Ընթացիկ ամսվա ոճեր */
+    .flatpickr-current-month {
+        color: #fff !important;
+    }
+
+    .numInputWrapper span {
+        border-color: #333 !important;
+    }
+
+    .numInputWrapper span:hover {
+        background: #505050 !important;
+    }
+
+    /* Ժամանակի ոճեր */
+    .flatpickr-time {
+        background: #404040 !important;
+        border-top: 1px solid #333 !important;
+    }
+
+    /* Սլաքների ոճեր */
+    .flatpickr-calendar.arrowTop:after {
+        border-bottom-color: #404040 !important;
+    }
+
+    .flatpickr-calendar.arrowBottom:after {
+        border-top-color: #404040 !important;
+    }
+
+    /* Նավիգացիայի կոճակների ոճեր */
+    .flatpickr-prev-month, .flatpickr-next-month {
+        fill: #fff !important;
+    }
+
+    .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg {
+        fill: #ccc !important;
+    }
+
+    /* Ամիսների dropdown սլաքի ոճեր */
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") !important;
+        background-position: right 0px top 50% !important;
+        background-repeat: no-repeat !important;
+        padding-right: 20px !important;
+    }
+
+
+
+
     .completed-appointment {
         background-color: yellow;
         border-color: #c3e6cb;
@@ -857,7 +1010,7 @@
         }
 
     .page-title {
-        color: #4e4e4e;
+        color: #c8c8c8;
         font-family: 'Arial', sans-serif;
         font-weight: bold;
         text-align: center;

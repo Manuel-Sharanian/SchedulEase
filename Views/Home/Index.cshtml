@@ -68,6 +68,7 @@
                 dateFormat: "Y-m-d",
                 locale: "hy",
                 onChange: function (selectedDates, dateStr, instance) {
+                    updateLinks(dateStr);
                     window.location.href = '@Url.Action("Index", "Home")' + '?selectedDate=' + dateStr;
                 }
             });
@@ -75,6 +76,9 @@
             calendar.open();
 
             updateLinks(formattedToday);
+
+            // Սկզբնական լինքերի թարմացում
+            updateLinks(selectedDate);
 
             function updateLinks(date) {
                 $('.service-window-link').each(function () {
@@ -166,18 +170,39 @@
                 border-color: #4a4a4a;
             }
 
-        .flatpickr-months, .flatpickr-current-month {
-            background-color: #2d2d2d;
+        /* Ամիսների վերնամասի ոճեր */
+        .flatpickr-months, .flatpickr-weekdays {
+            background: #333 !important;
         }
 
-            .flatpickr-current-month .flatpickr-monthDropdown-months {
-                background-color: #2d2d2d;
-                color: white;
+        .flatpickr-month, .flatpickr-weekday {
+            color: #fff !important;
+            fill: #fff !important;
+        }
+
+        /* Ամիսների ցանկի ոճեր */
+        .flatpickr-monthDropdown-months {
+            background: #333 !important;
+            color: #fff !important;
+            height: 24px !important;
+        }
+
+        /* Ամիսների ցանկի տարբերակների ոճեր */
+        .flatpickr-monthDropdown-month {
+            background-color: #404040 !important;
+            color: #fff !important;
+        }
+
+            /* Ամիսների ցանկի hover էֆեկտ */
+            .flatpickr-monthDropdown-month:hover {
+                background-color: #505050 !important;
             }
 
-            .flatpickr-current-month input.cur-year {
-                color: white;
+            /* Ընտրված ամսվա ոճ */
+            .flatpickr-monthDropdown-month.selected {
+                background-color: #666 !important;
             }
+
 
         .numInputWrapper span.arrowUp,
         .numInputWrapper span.arrowDown {

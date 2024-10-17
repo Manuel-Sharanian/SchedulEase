@@ -5,7 +5,7 @@
     ViewData["Title"] = Model.UserName ?? "Սեփական Գրանցումներ";
 }
 
-<h2 style="color: #4a4a4a;">Ուղղել Գրանցումը - @Model.UserName</h2>
+<h2 style="color: #c8c8c8;">Ուղղել Գրանցումը - @Model.UserName</h2>
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
@@ -21,7 +21,6 @@
         }
     </div>
 }
-
 
 <form asp-action="Edit">
     <input type="hidden" asp-for="Id" />
@@ -41,12 +40,9 @@
         <input asp-for="PhoneNumber" class="form-control bg-light-grey" />
         <span asp-validation-for="PhoneNumber" class="text-danger"></span>
     </div>
-    <div class="form-group date-picker-wrapper">
+    <div class="form-group">
         <label asp-for="AppointmentDate" style="color: #ffffff;">Գրանցման Օր</label>
-        <div class="date-picker-container">
-            <input id="appointment-date-display" class="form-control bg-light-grey clickable-field" type="text" readonly />
-            <input asp-for="AppointmentDate" id="appointment-date-picker" type="hidden" />
-        </div>
+        <input asp-for="AppointmentDate" id="appointment-date-picker" class="form-control bg-light-grey" type="text" />
         <span asp-validation-for="AppointmentDate" class="text-danger"></span>
     </div>
     <div class="form-group" style="margin-bottom: 10px;">
@@ -111,55 +107,23 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/hy.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
         $(document).ready(function () {
-            let isCalendarOpen = false;
+            flatpickr.localize(flatpickr.l10ns.hy);
 
-            $("#appointment-date-display").datepicker({
-                dateFormat: 'dd/mm/yy',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: "-0:+1",
-                beforeShow: function (input, inst) {
-                    setTimeout(function () {
-                        inst.dpDiv.css({
-                            top: $(".date-picker-container").offset().top + $(".date-picker-container").outerHeight(),
-                            left: $(".date-picker-container").offset().left
-                        });
-                    }, 0);
-                },
-                onSelect: function (dateText, inst) {
-                    var date = $(this).datepicker('getDate');
-                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', date);
-                    $("#appointment-date-picker").val(formattedDate);
-                    isCalendarOpen = false;
-                }
-            });
-
-            // Set initial date
-            var initialDate = $("#appointment-date-picker").val();
-            if (initialDate) {
-                $("#appointment-date-display").datepicker("setDate", new Date(initialDate));
-            }
-
-            $('.date-picker-container').on('click', function (e) {
-                e.stopPropagation(); // Prevent the click from reaching the document
-                if (isCalendarOpen) {
-                    $("#appointment-date-display").datepicker("hide");
-                    isCalendarOpen = false;
-                } else {
-                    $("#appointment-date-display").datepicker("show");
-                    isCalendarOpen = true;
-                }
-            });
-
-            // Close calendar when clicking outside
-            $(document).on('click', function () {
-                if (isCalendarOpen) {
-                    $("#appointment-date-display").datepicker("hide");
-                    isCalendarOpen = false;
+            var appointmentDatePicker = flatpickr("#appointment-date-picker", {
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                maxDate: new Date().fp_incr(365),
+                locale: "hy",
+                theme: "dark",
+                defaultDate: "@Model.AppointmentDate.ToString("yyyy-MM-dd")",
+                onChange: function (selectedDates, dateStr, instance) {
+                    // Այստեղ կարող եք ավելացնել լրացուցիչ տրամաբանություն, եթե անհրաժեշտ է
                 }
             });
 
@@ -268,22 +232,14 @@
             });
 
             $('#SelectedUserId').change(function () {
-                // Պահպանել ընտրված ամսաթիվը
                 var selectedDate = $('#appointment-date-picker').val();
-
-                // Վերականգնել ընտրված ամսաթիվը
                 $('#appointment-date-picker').val(selectedDate);
-                $("#appointment-date-display").datepicker("setDate", new Date(selectedDate));
             });
 
             $('.user-item').on('click', function () {
                 $('.user-item').removeClass('selected');
                 $(this).addClass('selected');
                 $('#selectedUserId').val($(this).data('userid'));
-
-                // You might want to reload some data based on the selected user
-                // For example, you could reload available time slots
-                // loadAvailableTimeSlots();
             });
 
         });
@@ -291,6 +247,123 @@
 }
 
 <style>
+    /* Flatpickr custom styles */
+    .flatpickr-calendar {
+        background: #333 !important;
+        border-color: #555 !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        color: #fff !important;
+    }
+
+    .flatpickr-day {
+        color: #fff !important;
+        background: #4a4a4a !important;
+        border-color: #555 !important;
+    }
+
+        .flatpickr-day:hover {
+            background: #555 !important;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange,
+        .flatpickr-day.selected.inRange,
+        .flatpickr-day.startRange.inRange,
+        .flatpickr-day.endRange.inRange,
+        .flatpickr-day.selected:focus,
+        .flatpickr-day.startRange:focus,
+        .flatpickr-day.endRange:focus {
+            background: #007bff !important;
+            border-color: #007bff !important;
+            color: #fff !important;
+        }
+
+        .flatpickr-day.today {
+            border-color: #007bff !important;
+            color: #007bff !important;
+        }
+
+            .flatpickr-day.today:hover,
+            .flatpickr-day.today:focus {
+                background: #007bff !important;
+                color: #fff !important;
+            }
+
+            .flatpickr-day.inRange,
+            .flatpickr-day.prevMonthDay.inRange,
+            .flatpickr-day.nextMonthDay.inRange,
+            .flatpickr-day.today.inRange,
+            .flatpickr-day.prevMonthDay.today.inRange,
+            .flatpickr-day.nextMonthDay.today.inRange,
+            .flatpickr-day:hover,
+            .flatpickr-day.prevMonthDay:hover,
+            .flatpickr-day.nextMonthDay:hover,
+            .flatpickr-day:focus,
+            .flatpickr-day.prevMonthDay:focus,
+            .flatpickr-day.nextMonthDay:focus {
+                background: #555 !important;
+                border-color: #555 !important;
+            }
+
+        .flatpickr-day.flatpickr-disabled,
+        .flatpickr-day.flatpickr-disabled:hover,
+        .flatpickr-day.prevMonthDay,
+        .flatpickr-day.nextMonthDay,
+        .flatpickr-day.notAllowed,
+        .flatpickr-day.notAllowed.prevMonthDay,
+        .flatpickr-day.notAllowed.nextMonthDay {
+            color: rgba(255, 255, 255, 0.3) !important;
+            background: transparent !important;
+        }
+
+    .flatpickr-current-month {
+        color: #fff !important;
+    }
+
+    .flatpickr-weekday {
+        color: #ccc !important;
+        background: #333 !important;
+    }
+
+    .flatpickr-months {
+        background: #333 !important;
+    }
+
+    .flatpickr-month {
+        color: #fff !important;
+        fill: #fff !important;
+    }
+
+    .flatpickr-monthDropdown-months {
+        background: #333 !important;
+        color: #fff !important;
+        height: 24px !important;
+    }
+
+    .flatpickr-monthDropdown-month {
+        background-color: #404040 !important;
+        color: #fff !important;
+    }
+
+        .flatpickr-monthDropdown-month:hover {
+            background-color: #505050 !important;
+        }
+
+        .flatpickr-monthDropdown-month.selected {
+            background-color: #666 !important;
+        }
+
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        fill: #fff !important;
+    }
+
+        .flatpickr-prev-month:hover svg,
+        .flatpickr-next-month:hover svg {
+            fill: #007bff !important;
+        }
+
     body {
         background-color: #f2f2f2;
         color: #ffffff;
@@ -335,23 +408,6 @@
     .text-danger {
         color: #dc3545;
     }
-
-    .clickable-field {
-        cursor: pointer;
-    }
-
-    .date-picker-wrapper {
-        position: relative;
-    }
-
-    .date-picker-container {
-        cursor: pointer;
-    }
-
-        .date-picker-container input[type="text"] {
-            background-color: #cccccc;
-            color: #333333;
-        }
 
 
     .service-selection-container {
