@@ -1,165 +1,293 @@
 ﻿@model List<UserViewModel>
-<h2 class="text-center mb-4 page-title">Օգտատերերի կառավարում</h2>
+<div class="page-container">
+    <h2 class="page-title">Օգտատերերի կառավարում</h2>
 
+    <div class="content-wrapper">
+        <!-- Desktop View -->
+        <div class="table-container d-none d-md-block">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Օգտանուն</th>
+                        <th>Դերեր</th>
+                        <th>Գործողություններ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.FullName</td>
+                            <td>
+                                <span class="role-badge @(user.Roles.Contains("Admin") ? "admin" : user.Roles.Contains("Manager") ? "manager" : "user")">
+                                    @string.Join(", ", user.Roles)
+                                </span>
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-controls">
+                                    <form asp-action="ChangeRole" method="post" class="role-form">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <select name="newRole" class="role-select">
+                                            <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
+                                            <option value="Manager" selected="@(user.Roles.Contains("Manager"))">Manager</option>
+                                            <option value="User" selected="@(user.Roles.Contains("User"))">User</option>
+                                        </select>
+                                        <button type="submit" class="btn change-btn">Փոխել</button>
+                                    </form>
+                                    @if (!user.Roles.Contains("Admin"))
+                                    {
+                                        <form asp-action="DeleteUser" method="post" class="delete-form"
+                                              onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս օգտատիրոջը:');">
+                                            <input type="hidden" name="userId" value="@user.Id" />
+                                            <button type="submit" class="btn delete-btn">Ջնջել</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-<div class="container">
-    <div class="table-responsive d-none d-md-block">
-        <table class="table table-striped table-hover">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Օգտանուն</th>
-                    <th>Դերեր</th>
-                    <th>Գործողություններ</th>
-                </tr>
-            </thead>
-            <tbody>
+        <!-- Mobile View -->
+        <div class="cards-container d-md-none">
+            <div class="cards-scroll-wrapper">
                 @foreach (var user in Model)
                 {
-                    <tr>
-                        <td>@user.FullName</td>
-                        <td>
-                            <span class="badge badge-@(user.Roles.Contains("Admin") ? "danger" : user.Roles.Contains("Manager") ? "warning" : "secondary")">
+                    <div class="user-card">
+                        <div class="user-card-content">
+                            <h3 class="user-name">@user.FullName</h3>
+                            <span class="role-badge @(user.Roles.Contains("Admin") ? "admin" : user.Roles.Contains("Manager") ? "manager" : "user")">
                                 @string.Join(", ", user.Roles)
                             </span>
-                        </td>
-                        <td>
-                            <form asp-action="ChangeRole" method="post" class="d-flex mb-2">
-                                <input type="hidden" name="userId" value="@user.Id" />
-                                <select name="newRole" class="form-control mr-2 custom-select">
-                                    <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
-                                    <option value="Manager" selected="@(user.Roles.Contains("Manager"))">Manager</option>
-                                    <option value="User" selected="@(user.Roles.Contains("User"))">User</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary mr-2">Փոխել</button>
-                            </form>
-                            @if (!user.Roles.Contains("Admin"))
-                            {
-                                <form asp-action="DeleteUser" method="post" onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս օգտատիրոջը:');">
+                            <div class="card-actions">
+                                <form asp-action="ChangeRole" method="post" class="role-form">
                                     <input type="hidden" name="userId" value="@user.Id" />
-                                    <button type="submit" class="btn btn-danger">Ջնջել</button>
+                                    <select name="newRole" class="role-select">
+                                        <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
+                                        <option value="Manager" selected="@(user.Roles.Contains("Manager"))">Manager</option>
+                                        <option value="User" selected="@(user.Roles.Contains("User"))">User</option>
+                                    </select>
+                                    <!-- Change text to icon for mobile view -->
+                                    <button type="submit" class="btn change-btn">
+                                        <i class="fas fa-edit"></i> <!-- Icon for 'Change' -->
+                                    </button>
                                 </form>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <div class="d-md-none">
-        @foreach (var user in Model)
-        {
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">@user.FullName</h5>
-                    <p class="card-text">
-                        <span class="badge badge-@(user.Roles.Contains("Admin") ? "danger" : user.Roles.Contains("Manager") ? "warning" : "secondary")">
-                            @string.Join(", ", user.Roles)
-                        </span>
-                    </p>
-                    <form asp-action="ChangeRole" method="post" class="mb-2">
-                        <input type="hidden" name="userId" value="@user.Id" />
-                        <div class="form-group">
-                            <select name="newRole" class="form-control custom-select">
-                                <option value="Admin" selected="@(user.Roles.Contains("Admin"))">Admin</option>
-                                <option value="Manager" selected="@(user.Roles.Contains("Manager"))">Manager</option>
-                                <option value="User" selected="@(user.Roles.Contains("User"))">User</option>
-                            </select>
+                                @if (!user.Roles.Contains("Admin"))
+                                {
+                                    <form asp-action="DeleteUser" method="post" class="delete-form"
+                                          onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս օգտատիրոջը:');">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <!-- Change text to icon for mobile view -->
+                                        <button type="submit" class="btn delete-btn">
+                                            <i class="fas fa-trash"></i> <!-- Icon for 'Delete' -->
+                                        </button>
+                                    </form>
+                                }
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block">Փոխել</button>
-                    </form>
-                    @if (!user.Roles.Contains("Admin"))
-                    {
-                        <form asp-action="DeleteUser" method="post" onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս օգտատիրոջը:');">
-                            <input type="hidden" name="userId" value="@user.Id" />
-                            <button type="submit" class="btn btn-danger btn-block">Ջնջել</button>
-                        </form>
-                    }
-                </div>
+                    </div>
+                }
             </div>
-        }
+        </div>
     </div>
 
-    <a asp-controller="IncomeReport" asp-action="Index" class="btn btn-info">Եկամտի հաշվետվություն</a>
+    <div class="footer-actions">
+        <a asp-controller="IncomeReport" asp-action="Index" class="btn report-btn">Եկամտի հաշվետվություն</a>
+    </div>
 </div>
 
 
 <style>
+    /* General Styles */
+    .page-container {
+        padding: 2rem;
+        color: #fff;
+    }
+
     .page-title {
-        color: #4e4e4e;
-        font-family: 'Arial', sans-serif;
-        font-weight: bold;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        color: #fff;
         text-align: center;
+        font-weight: 600;
     }
-    .btn-primary {
-        background-color: #4a4a4a;
+
+    /* Table Styles */
+    .table-container {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 2rem;
     }
-    .btn-primary:hover {
-        background-color: #666666;
+
+    .users-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
     }
-    .custom-select {
-        background-color: #4a4a4a;
+
+    .users-table th {
+        padding: 1rem;
+        color: #fff;
+        font-weight: 600;
+        text-align: left;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .users-table td {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .users-table tr:hover td {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Role Badges */
+    .role-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .role-badge.admin {
+        background: #dc3545;
         color: white;
+    }
+
+    .role-badge.manager {
+        background: #ffc107;
+        color: #000;
+    }
+
+    .role-badge.user {
+        background: #6c757d;
+        color: white;
+    }
+
+    /* Form Controls */
+    .role-select {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.5rem;
+        border-radius: 5px;
+        margin-right: 0.5rem;
+    }
+
+    .role-select option {
+        background: #2a2a2a;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
         border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
     }
-    .custom-select option {
-        background-color: #4a4a4a;
+
+    .change-btn {
+        background: #4a4a4a;
         color: white;
     }
-    .custom-select:focus {
-        background-color: #4a4a4a;
+
+    .change-btn:hover {
+        background: #666666;
+    }
+
+    .delete-btn {
+        background: #dc3545;
         color: white;
-        border: none;
-        outline: none;
-        box-shadow: none;
     }
-    .btn-danger {
-        background-color: #dc3545;
+
+    .delete-btn:hover {
+        background: #c82333;
     }
-    .btn-danger:hover {
-        background-color: #c82333;
-    }
-    .badge-danger {
-        background-color: #dc3545;
+
+    .report-btn {
+        background: #17a2b8;
         color: white;
-        font-weight: bold;
-        padding: 5px 10px;
-        border-radius: 12px;
     }
-    .badge-secondary {
-        background-color: #6c757d;
-        color: white;
-        font-weight: bold;
-        padding: 5px 10px;
-        border-radius: 12px;
+
+    .report-btn:hover {
+        background: #138496;
     }
-    tr:hover {
-        background-color: #6c757d;
-    }
-    
+
+    /* Mobile Styles */
     @@media (max-width: 767px) {
-        .card {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
+        .cards-scroll-wrapper {
+            display: flex;
+            overflow-x: auto;
+            padding: 1rem 0;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
         }
-        .card:hover {
-            background-color: #e9ecef;
+
+            .cards-scroll-wrapper::-webkit-scrollbar {
+                display: none; /* WebKit */
+            }
+
+        .user-card {
+            flex: 0 0 300px;
+            margin-right: 1rem;
+            scroll-snap-align: start;
         }
-        .btn-block {
-            display: block;
+
+        .user-card-content {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 10px;
+            height: 100%;
+        }
+
+        .user-name {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-actions {
+            margin-top: 1.5rem;
+        }
+
+        .role-form, .delete-form {
+            margin-bottom: 0.5rem;
+        }
+
+        .btn {
             width: 100%;
+            margin-top: 0.5rem;
         }
-        .custom-select {
+
+        .role-select {
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 0.5rem;
         }
     }
 
-    .badge-warning {
-        background-color: #ffc107;
-        color: #212529;
-        font-weight: bold;
-        padding: 5px 10px;
-        border-radius: 12px;
+    /* Հեռացնում ենք նախկին scrollbar styling-ը */
+
+    /* New styles for desktop view */
+    @@media (min-width: 768px) {
+        .action-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .role-form {
+            display: flex;
+            align-items: center;
+            margin-right: 0.5rem;
+        }
+
+        .delete-form {
+            margin-left: 0.5rem;
+        }
     }
 </style>

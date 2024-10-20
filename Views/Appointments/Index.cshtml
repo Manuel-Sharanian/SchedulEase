@@ -9,37 +9,27 @@
 
 <div class="container mt-4">
     <!-- Դեսքթոփ տարբերակ -->
-    <div class="row mb-4 desktop-layout">
+    <div class="row mb-4">
         <div class="col-md-6 d-flex align-items-center">
             <div class="date-input-wrapper flex-grow-1">
                 <div class="d-flex align-items-center">
                     <button id="prevDay" class="btn btn-outline-secondary custom-day-button">&lt;</button>
-                    <input type="text" id="datepicker" class="form-control datepicker-input" readonly value="@selectedDate.ToString("dd/MM/yyyy")" />
+                    <input type="text" id="datepicker" class="form-control datepicker-input" readonly />
                     <button id="nextDay" class="btn btn-outline-secondary custom-day-button">&gt;</button>
                 </div>
             </div>
         </div>
         <div class="col-md-6 text-right">
             <div class="d-flex align-items-center justify-content-end">
-                <a asp-action="Create" asp-route-userId="@ViewBag.TargetUserId" class="btn btn-new-appointment mr-2">Նոր Նշանակում</a>
+                <a href="#" class="btn btn-new-appointment mr-2" onclick="redirectToNewAppointment()">
+                    <i class="fas fa-plus d-md-none"></i>
+                    <span class="d-none d-md-inline">Նոր Նշանակում</span>
+                </a>
             </div>
         </div>
-    </div>
-    <!-- Մոբայլ տարբերակ -->
-    <div class="mobile-layout">
-        <div class="date-controls">
-            <div class="date-input-wrapper">
-                <div class="d-flex align-items-center">
-                    <button id="prevDayMobile" class="btn btn-outline-secondary custom-day-button">&lt;</button>
-                    <input type="text" id="datepickerMobile" class="form-control datepicker-input" readonly value="@selectedDate.ToString("dd/MM/yyyy")" />
-                    <button id="nextDayMobile" class="btn btn-outline-secondary custom-day-button">&gt;</button>
-                </div>
-            </div>
-        </div>
-        <a asp-action="Create" asp-route-userId="@ViewBag.TargetUserId" class="btn btn-new-appointment mt-2">Նոր Նշանակում</a>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive d-none d-md-block">
         <table class="table table-bordered">
             <thead class="thead-light">
                 <tr>
@@ -71,7 +61,7 @@
                                 var appointment = appointments.First();
                                 var rowspan = (int)Math.Ceiling(appointment.Appointment.Duration / 30.0);
                                 appointmentCounter++;
-                                var backgroundColor = appointmentCounter % 2 == 0 ? "#bababa" : "#e0e0e0";
+                                var backgroundColor = appointmentCounter % 2 == 0 ? "#bababa" : "#d3d3d3";
                                 <td style="background-color: @backgroundColor;" rowspan="@rowspan">
                                     @if (appointment.CreatedByUserId != appointment.UserId)
                                     {
@@ -82,24 +72,28 @@
                                 <td style="background-color: @backgroundColor;" rowspan="@rowspan">
                                     @appointment.Appointment.PhoneNumber<br />
                                 </td>
-                                <td style="background-color: @backgroundColor;" rowspan="@rowspan">
-                                    <div class="service-selection-container">
-                                        <input type="text" class="service-search form-control" data-id="@appointment.Appointment.Id"
-                                               value="@(appointment.Appointment.ServiceId.HasValue ? appointment.Service?.ServiceName : appointment.Appointment.CustomServiceName)"
-                                               placeholder="Որոնել կամ մուտքագրել ծառայությունը">
-                                        <div class="service-list-container" style="display: none;">
-                                            <!-- Ծառայությունների ցանկը կլցվի JavaScript-ով -->
+                                    <td style="background-color: @backgroundColor;" rowspan="@rowspan">
+                                        <div class="service-selection-container">
+                                            <input type="text" 
+                                                   class="service-search form-control" 
+                                                   data-id="@appointment.Appointment.Id"
+                                                   data-original-name="@(appointment.Appointment.ServiceId.HasValue ? appointment.Service?.ServiceName : appointment.Appointment.CustomServiceName)"
+                                                   value="@(appointment.Appointment.ServiceId.HasValue ? appointment.Service?.ServiceName : appointment.Appointment.CustomServiceName)"
+                                                   placeholder="Որոնել կամ մուտքագրել"
+                                                   @(appointment.Appointment.IsCompleted && !User.IsInRole("Admin") ? "readonly" : "")>
+                                            <div class="service-list-container" style="display: none;">
+                                                <!-- Ծառայությունների ցանկը կլցվի JavaScript-ով -->
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
+                                    </td>
                                 <td style="background-color: @backgroundColor;" rowspan="@rowspan">
                                     @if (!appointment.Appointment.IsCompleted || ViewBag.IsAdmin)
                                     {
                                         <span class="editable-amount" data-id="@appointment.Appointment.Id">
-                                            @(appointment.Appointment.CustomPrice.HasValue ?
+                                            @(appointment.Appointment.CustomPrice.HasValue ? 
                                                 String.Format("{0:#,##0.00 ֏}", appointment.Appointment.CustomPrice.Value) :
                                                 String.Format("{0:#,##0.00 ֏}", appointment.Service?.Price ?? 0))
-                                        </span>
+                                        </span>                                        
                                     }
                                     else
                                     {
@@ -114,8 +108,16 @@
                                     <div class="btn-group" role="group" aria-label="Operations">
                                         @if (!appointment.Appointment.IsCompleted || isAdmin)
                                         {
-                                            <a class="btn btn-info edit-btn" asp-action="Edit" asp-route-id="@appointment.Appointment.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Ուղղել</a>
-                                            <a class="btn btn-danger delete-btn" asp-action="Delete" asp-route-id="@appointment.Appointment.Id" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString" style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">Ջնջել</a>
+                                            <a class="btn btn-info edit-btn" asp-action="Edit" asp-route-id="@appointment.Appointment.Id"
+                                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                                               style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">
+                                                <span>Ուղղել</span>
+                                            </a>
+                                            <a class="btn btn-danger delete-btn" asp-action="Delete" asp-route-id="@appointment.Appointment.Id"
+                                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                                               style="text-decoration: none; margin-right: 5px;" onclick="event.stopPropagation()">
+                                                <span>Ջնջել</span>
+                                            </a>
                                         }
 
                                         @if (appointment.Appointment.IsCompleted)
@@ -126,12 +128,14 @@
                                                    style="text-decoration: none; margin-right: 5px;"
                                                    onclick="handleToggleCompletedClick(event, '@appointment.Appointment.Id', this, @Json.Serialize(isAdmin), @appointment.Appointment.IsCompleted.ToString().ToLower())"
                                                    data-price="@(appointment.Appointment.CustomPrice != null ? appointment.Appointment.CustomPrice : appointment.Service.Price)">
-                                                    Չեղարկել Կատարվածը
+                                                    <span>Չեղարկել Կատարվածը</span>
                                                 </a>
                                             }
                                             else
                                             {
-                                                <span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">Կատարված</span>
+                                                <span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">
+                                                    <span>Կատարված</span>
+                                                </span>
                                             }
                                         }
                                         else if (isAdmin || User.IsInRole("Manager"))
@@ -140,7 +144,7 @@
                                                style="text-decoration: none; margin-right: 5px;"
                                                onclick="handleToggleCompletedClick(event, '@appointment.Appointment.Id', this, @Json.Serialize(isAdmin), @appointment.Appointment.IsCompleted.ToString().ToLower())"
                                                data-price="@(appointment.Appointment.CustomPrice != null ? appointment.Appointment.CustomPrice : appointment.Service.Price)">
-                                                Նշել կատարված
+                                                <span>Նշել կատարված</span>
                                             </a>
                                         }
                                     </div>
@@ -155,6 +159,156 @@
                 }
             </tbody>
         </table>
+    </div>
+
+
+    <!-- Քարտեր մոբայլի համար -->
+    <div class="appointment-cards d-md-none">
+        @{
+            var processedTimes = new HashSet<TimeSpan>();
+        }
+        @for (int hour = 6; hour < 20; hour++)
+        {
+            for (int minute = 0; minute < 60; minute += 30)
+            {
+                var currentTime = new TimeSpan(hour, minute, 0);
+                var appointments = Model.Where(a => a.Appointment.AppointmentHour == currentTime).ToList();
+                var ongoingAppointment = Model.FirstOrDefault(a =>
+                    a.Appointment.AppointmentHour <= currentTime &&
+                    a.Appointment.AppointmentHour.Add(TimeSpan.FromMinutes(a.Appointment.Duration)) > currentTime);
+
+                if (!processedTimes.Contains(currentTime))
+                {
+                    @if (appointments.Any())
+                    {
+                        var appointment = appointments.First();
+                        processedTimes.UnionWith(
+                            Enumerable.Range(0, (int)Math.Ceiling(appointment.Appointment.Duration / 30.0))
+                            .Select(i => currentTime.Add(TimeSpan.FromMinutes(i * 30)))
+                        );
+
+                        <div class="card mb-3 @(appointment.Appointment.IsCompleted ? "completed-appointment" : "")" data-appointment-id="@appointment.Appointment.Id">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-0">@hour.ToString("00"):@minute.ToString("00")</h5>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock"></i> 
+                                        @appointment.Appointment.Duration րոպե
+                                    </small>
+                                </div>
+                                @if (appointment.CreatedByUserId != appointment.UserId)
+                                {
+                                    <span class="badge badge-info">
+                                        <i class="fas fa-user"></i> @appointment.CreatedByUsername
+                                    </span>
+                                }
+                            </div>
+                            <div class="card-body">
+                                <div class="appointment-info">
+                                    <div class="row mb-2">
+                                        <div class="col-5">
+                                            <i class="fas fa-user-circle"></i>
+                                        </div>
+                                        <div class="col-7">@appointment.Appointment.FirstName</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-5">
+                                            <i class="fas fa-phone"></i>
+                                        </div>
+                                        <div class="col-7">@appointment.Appointment.PhoneNumber</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-5">
+                                            <i class="fas fa-concierge-bell"></i>
+                                        </div>
+                                        <div class="col-7">
+                                            <div class="service-selection-container">
+                                                <input type="text" class="service-search form-control" 
+                                                       data-id="@appointment.Appointment.Id"
+                                                       value="@(appointment.Appointment.ServiceId.HasValue ? appointment.Service?.ServiceName : appointment.Appointment.CustomServiceName)"
+                                                       placeholder="Որոնել կամ մուտքագրել">
+                                                <div class="service-list-container" style="display: none;">
+                                                    <!-- Ծառայությունների ցանկը կլցվի JavaScript-ով -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-5">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </div>
+                                        <div class="col-7">
+                                            <span class="editable-amount" data-id="@appointment.Appointment.Id">
+                                                @(appointment.Appointment.CustomPrice.HasValue ? 
+                                                    String.Format("{0:#,##0.00 ֏}", appointment.Appointment.CustomPrice.Value) :
+                                                    String.Format("{0:#,##0.00 ֏}", appointment.Service?.Price ?? 0))
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-group mt-3">
+                                    @if (appointment.Appointment.IsCompleted)
+                                    {
+                                        @if (isAdmin)
+                                        {
+                                            <button class="btn btn-info btn-sm edit-btn" title="Ուղղել">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-btn" title="Ջնջել">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" 
+                                                    id="toggleCompletedBtn_@appointment.Appointment.Id"
+                                                    onclick="handleMobileToggleCompletedClick(event, '@appointment.Appointment.Id', this, @Json.Serialize(isAdmin), @appointment.Appointment.IsCompleted.ToString().ToLower())"
+                                                    data-price="@(appointment.Appointment.CustomPrice != null ? appointment.Appointment.CustomPrice : appointment.Service.Price)"
+                                                    title="Չեղարկել Կատարվածը">
+                                                <i class="fas fa-times-circle"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-secondary btn-sm" disabled title="Կատարված">
+                                                <i class="fas fa-check-circle"></i>
+                                            </button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-info btn-sm edit-btn" title="Ուղղել">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm delete-btn" title="Ջնջել">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                        @if (isAdmin || User.IsInRole("Manager"))
+                                        {
+                                            <button class="btn btn-success btn-sm"
+                                                    id="toggleCompletedBtn_@appointment.Appointment.Id"
+                                                    onclick="handleMobileToggleCompletedClick(event, '@appointment.Appointment.Id', this, @Json.Serialize(isAdmin), @appointment.Appointment.IsCompleted.ToString().ToLower())"
+                                                    data-price="@(appointment.Appointment.CustomPrice != null ? appointment.Appointment.CustomPrice : appointment.Service.Price)"
+                                                    title="Նշել կատարված">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (ongoingAppointment == null)
+                    {
+                        <div class="card mb-3 empty-slot" onclick="redirectToCreate('@selectedDate.ToString("yyyy-MM-dd")', '@hour.ToString("00"):@minute.ToString("00")')">
+                            <div class="card-body text-center">
+                                <h5 class="mb-0">@hour.ToString("00"):@minute.ToString("00")</h5>
+                                <small class="text-muted">
+                                    <i class="fas fa-plus-circle"></i>
+                                </small>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        }
     </div>
 
     <div class="container-fluid mt-4">
@@ -313,7 +467,6 @@
     }
 
     var desktopFp = initFlatpickr("#datepicker", "prevDay", "nextDay");
-    var mobileFp = initFlatpickr("#datepickerMobile", "prevDayMobile", "nextDayMobile");
 
     function changeDate(date) {
         var userId = '@ViewBag.TargetUserId';
@@ -323,6 +476,25 @@
     function redirectToCreate(date, time) {
         var userId = '@ViewBag.TargetUserId';
         window.location.href = '/Appointments/Create?userId=' + userId + '&date=' + date + '&time=' + time;
+    }
+
+    function redirectToNewAppointment() {
+        var userId = '@ViewBag.TargetUserId';
+        var currentDate = $('#datepicker').val(); // Ստանում ենք ընտրված ամսաթիվը datepicker-ից
+        
+        // Ձևափոխում ենք ամսաթիվը yyyy-MM-dd ֆորմատի
+        var formattedDate = formatDateForUrl(currentDate);
+        
+        // Ուղղորդում ենք Create էջ
+        window.location.href = '/Appointments/Create?userId=' + userId + '&date=' + formattedDate;
+    }
+
+    function formatDateForUrl(dateString) {
+        var date = new Date(dateString);
+        var year = date.getFullYear();
+        var month = (date.getMonth() + 1).toString().padStart(2, '0');
+        var day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     function formatDateForUrl(dateString) {
@@ -380,7 +552,8 @@
         $('#employeeAmount').text(calculatedEmployeeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ֏');
     }
 
-    $(document).ready(function () {
+    $(document).ready(function () 
+    {
         // Ֆունկցիա նշանակման տողերի ֆոնը թարմացնելու համար
         function updateAppointmentRowBackground($row, isCompleted) {
             var rowspan = parseInt($row.find('td[rowspan]').attr('rowspan'));
@@ -417,44 +590,13 @@
         window.handleToggleCompletedClick = function (event, appointmentId, element, isAdmin, isCompleted) {
             event.stopPropagation();
             var price = parseFloat($(element).data('price'));
+
             $.ajax({
                 url: '/Appointments/ToggleCompleted/' + appointmentId,
                 type: 'POST',
                 success: function (response) {
                     if (response.success) {
-                        var $btn = $('#toggleCompletedBtn_' + appointmentId);
-                        var $row = $btn.closest('tr');
-
-                        if (response.isCompleted) {
-                            updateAppointmentRowBackground($row, true);
-                            if (isAdmin) {
-                                $btn.removeClass('btn-success').addClass('btn-warning').text('Չեղարկել Կատարվածը');
-                            } else {
-                                $row.find('.delete-btn, .edit-btn').remove();
-                                $row.find('.editable-amount').each(function () {
-                                    var $this = $(this);
-                                    var currentAmount = $this.text();
-                                    $this.replaceWith('<span>' + currentAmount + '</span>');
-                                });
-                                $row.find('.service-search').prop('disabled', true).css('background-color', '#f8f9fa');
-                                $btn.replaceWith('<span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">Կատարված</span>');
-                            }
-                            totalCompletedAmount += price;
-                            completedCount += 1;
-                        } else {
-                            updateAppointmentRowBackground($row, false);
-                            $row.find('.editable-amount, .service-search').prop('disabled', false).css('background-color', '');
-                            if (isAdmin) {
-                                $btn.removeClass('btn-warning').addClass('btn-success').text('Նշել կատարված');
-                            }
-                            if (!isAdmin) {
-                                $row.find('.btn-group').prepend('<a class="btn btn-info edit-btn" href="/Appointments/Edit/' + appointmentId + '" style="text-decoration: none; margin-right: 5px;">Ուղղել</a>');
-                                $row.find('.btn-group').prepend('<a class="btn btn-danger delete-btn" href="/Appointments/Delete/' + appointmentId + '" style="text-decoration: none; margin-right: 5px;">Ջնջել</a>');
-                            }
-                            totalCompletedAmount -= price;
-                            completedCount -= 1;
-                        }
-                        updateTotalCompletedAmount();
+                        updateUI(appointmentId, response.isCompleted, isAdmin, price);
                     }
                 },
                 error: function (xhr, status, error) {
@@ -466,6 +608,177 @@
                 }
             });
         };
+
+        function updateUI(appointmentId, isCompleted, isAdmin, price) {
+            var $desktopRow = $('#toggleCompletedBtn_' + appointmentId).closest('tr');
+            var $mobileCard = $('.card[data-appointment-id="' + appointmentId + '"]');
+            var $serviceField = $desktopRow.find('.service-search');
+            var $mobileServiceField = $mobileCard.find('.service-search');
+
+            if (isCompleted) {
+                updateCompletedUI($desktopRow, $mobileCard, $serviceField, $mobileServiceField, appointmentId, isAdmin);
+                totalCompletedAmount += price;
+                completedCount += 1;
+            } else {
+                updateNotCompletedUI($desktopRow, $mobileCard, $serviceField, $mobileServiceField, appointmentId, isAdmin);
+                totalCompletedAmount -= price;
+                completedCount -= 1;
+            }
+
+            updateTotalCompletedAmount();
+        }
+
+        function updateCompletedUI($desktopRow, $mobileCard, $serviceField, $mobileServiceField, appointmentId, isAdmin) {
+            updateAppointmentRowBackground($desktopRow, true);
+            var $desktopBtn = $('#toggleCompletedBtn_' + appointmentId);
+
+            if (isAdmin) {
+                updateAdminCompletedUI($desktopBtn, $mobileCard, $mobileServiceField);
+            } else {
+                updateNonAdminCompletedUI($desktopRow, $mobileCard, $serviceField, $mobileServiceField);
+            }
+
+            $mobileCard.addClass('completed-appointment');
+        }
+
+        function updateNotCompletedUI($desktopRow, $mobileCard, $serviceField, $mobileServiceField, appointmentId, isAdmin) {
+            // Դեսքթոփի UI թարմացում
+            updateAppointmentRowBackground($desktopRow, false);
+            $serviceField.prop('readonly', false).css('background-color', '');
+            $mobileServiceField.prop('readonly', false).css('background-color', '');
+
+            var $desktopBtn = $('#toggleCompletedBtn_' + appointmentId);
+            var $mobileBtn = $mobileCard.find('.button-group button:last-child');
+
+            if (isAdmin) {
+                $desktopBtn.removeClass('btn-warning').addClass('btn-success')
+                    .html('<i class="fas fa-check d-lg-none"></i>' +
+                        '<span class="d-none d-lg-inline">Նշել կատարված</span>');
+                $mobileBtn.removeClass('btn-warning').addClass('btn-success')
+                    .attr('title', 'Նշել կատարված')
+                    .html('<i class="fas fa-check"></i>');
+            }
+
+            if (!isAdmin) {
+                addEditDeleteButtons($desktopRow, $mobileCard, appointmentId);
+            }
+
+            $mobileCard.removeClass('completed-appointment');
+        }
+
+        function updateAdminCompletedUI($desktopBtn, $mobileCard, $mobileServiceField) {
+            $desktopBtn.removeClass('btn-success').addClass('btn-warning')
+                .html('<i class="fas fa-times-circle d-lg-none"></i>' +
+                    '<span class="d-none d-lg-inline">Չեղարկել Կատարվածը</span>');
+
+            var $mobileBtn = $mobileCard.find('.button-group button:last-child');
+            $mobileBtn.removeClass('btn-success').addClass('btn-warning')
+                .attr('title', 'Չեղարկել Կատարվածը')
+                .html('<i class="fas fa-times-circle"></i>')
+                .prop('disabled', false);  // Ապահովում ենք, որ կոճակը ակտիվ է
+
+            // Պահպանում ենք խմբագրման և ջնջման կոճակները
+            addEditDeleteButtons($mobileCard);
+
+            // Ապահովում ենք, որ ծառայության և գումարի դաշտերը մնան խմբագրելի
+            $mobileServiceField.prop('readonly', false).css('background-color', '');
+            $mobileCard.find('.editable-amount').prop('readonly', false).css('background-color', '');
+        }
+
+        function updateNonAdminCompletedUI($desktopRow, $mobileCard, $serviceField, $mobileServiceField) {
+            $desktopRow.find('.delete-btn, .edit-btn').remove();
+            $mobileCard.find('.delete-btn, .edit-btn').remove();
+
+            $desktopRow.find('.editable-amount').each(function () {
+                var $this = $(this);
+                var currentAmount = $this.text();
+                $this.replaceWith('<span>' + currentAmount + '</span>');
+            });
+
+            $mobileCard.find('.editable-amount').each(function () {
+                var $this = $(this);
+                var currentAmount = $this.text();
+                $this.replaceWith('<span>' + currentAmount + '</span>');
+            });
+
+            $serviceField.prop('readonly', true).css('background-color', '#f8f9fa');
+            $mobileServiceField.prop('readonly', true).css('background-color', '#f8f9fa');
+
+            var $desktopBtn = $desktopRow.find('.btn-success');
+            var $mobileBtn = $mobileCard.find('.button-group button:last-child');
+
+            $desktopBtn.replaceWith('<span class="btn btn-secondary" style="text-decoration: none; margin-right: 5px;">' +
+                '<i class="fas fa-check-circle d-lg-none"></i>' +
+                '<span class="d-none d-lg-inline">Կատարված</span></span>');
+
+            $mobileBtn.removeClass('btn-success').addClass('btn-secondary')
+                .attr('disabled', 'disabled')
+                .attr('title', 'Կատարված')
+                .html('<i class="fas fa-check-circle"></i>');
+        }
+
+        function addEditDeleteButtons($mobileCard, appointmentId) {
+            var $buttonGroup = $mobileCard.find('.button-group');
+
+            // Ստուգում ենք արդյոք կոճակները արդեն գոյություն ունեն
+            if ($buttonGroup.find('.edit-btn').length === 0) {
+                $buttonGroup.prepend(
+                    '<button class="btn btn-info btn-sm edit-btn" title="Ուղղել">' +
+                    '<i class="fas fa-edit"></i></button>'
+                );
+            }
+
+            if ($buttonGroup.find('.delete-btn').length === 0) {
+                $buttonGroup.prepend(
+                    '<button class="btn btn-danger btn-sm delete-btn" title="Ջնջել">' +
+                    '<i class="fas fa-trash-alt"></i></button>'
+                );
+            }
+        }
+
+        // Մոբայլ տարբերակի համար նոր ֆունկցիա
+        window.handleMobileToggleCompletedClick = function(event, appointmentId, element, isAdmin, isCompleted) {
+            // Օգտագործում ենք նույն ֆունկցիան, ինչ դեսքթոփի համար
+            handleToggleCompletedClick(event, appointmentId, element, isAdmin, isCompleted);
+        };
+
+        // Էջը բեռնվելիս կաշխատի այս ֆունկցիան
+        $('.appointment-cards .card').each(function() {
+            var $card = $(this);
+            var appointmentId = $card.data('appointment-id');
+            var isCompleted = $card.hasClass('completed-appointment');
+            var isAdmin = $card.find('.btn-warning').length > 0;
+
+            if (isCompleted) {
+                var $serviceField = $card.find('.service-search');
+                var $amountField = $card.find('.editable-amount');
+                var $toggleButton = $card.find('.btn-success, .btn-warning, .btn-secondary');
+            
+                if (isAdmin) {
+                    updateAdminCompletedUI($toggleButton, $card, $serviceField);
+                } else {
+                    updateNonAdminCompletedUI($card, $card, $serviceField, $serviceField);
+                }
+            }
+        });
+
+        // Ավելացնում ենք իրադարձությունների մշակիչներ դինամիկ ստեղծված կոճակների համար
+        $(document).on('click', '.appointment-cards .edit-btn', function(e) {
+            e.preventDefault();
+            var appointmentId = $(this).closest('.card').data('appointment-id');
+            var currentUrl = encodeURIComponent(window.location.href);
+            window.location.href = '/Appointments/Edit/' + appointmentId + '?returnUrl=' + currentUrl;
+        });
+
+        $(document).on('click', '.appointment-cards .delete-btn', function(e) {
+            e.preventDefault();
+            var appointmentId = $(this).closest('.card').data('appointment-id');
+            var currentUrl = encodeURIComponent(window.location.href);
+            if (confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս նշանակումը:')) {
+                window.location.href = '/Appointments/Delete/' + appointmentId + '?returnUrl=' + currentUrl;
+            }
+        });
+
 
         updateTotalCompletedAmount();
 
@@ -726,11 +1039,33 @@
                 data: { appointmentId: appointmentId, serviceId: serviceId, serviceName: serviceName },
                 success: function (response) {
                     if (response.success) {
-                        var serviceInput = $('[data-id="' + appointmentId + '"]');
-                        serviceInput.val(serviceName);
-                        serviceInput.attr('data-original-name', serviceName);
-                        var priceCell = serviceInput.closest('tr').find('.editable-amount');
-                        priceCell.text(response.formattedPrice);
+                        // Թարմացնել ծառայության անունը երկու տեսքերում
+                        var serviceInputs = $('[data-id="' + appointmentId + '"]');
+                        serviceInputs.val(serviceName);
+                        serviceInputs.attr('data-original-name', serviceName);
+
+                        // Թարմացնել գինը դեսքթոփ տարբերակում
+                        var desktopPriceCell = $('.table-responsive').find('[data-id="' + appointmentId + '"]')
+                            .closest('tr')
+                            .find('.editable-amount');
+                        if (desktopPriceCell.length) {
+                            desktopPriceCell.text(response.formattedPrice);
+                        }
+
+                        // Թարմացնել գինը մոբայլ տարբերակում
+                        var mobileCard = $('.appointment-cards').find('[data-id="' + appointmentId + '"]')
+                            .closest('.card')
+                            .find('.editable-amount');
+                        if (mobileCard.length) {
+                            mobileCard.text(response.formattedPrice);
+                        }
+
+                        // Լրացուցիչ ստուգում custom-price դաշտի համար (եթե կա)
+                        var customPriceElements = $('.custom-price[data-appointment-id="' + appointmentId + '"]');
+                        if (customPriceElements.length) {
+                            customPriceElements.text(response.formattedPrice);
+                        }
+
                     } else {
                         alert('Սխալ ծառայությունը թարմացնելիս: ' + response.errorMessage);
                     }
@@ -764,22 +1099,6 @@
 
             updateService(appointmentId, null, serviceName);
         });
-
-        //Օրացույցը ու կոճակները կարգավորող կոդ
-        function adjustTableForMobile() {
-            if (window.innerWidth <= 768) {
-                $('.table-responsive').scrollLeft(0);
-                $('.hour-cell').css('width', '60px');
-            } else {
-                $('.hour-cell').css('width', 'auto');
-            }
-        }
-
-        adjustTableForMobile();
-        $(window).resize(adjustTableForMobile);
-
-        // Կանչենք ֆունկցիան էջի բեռնման ժամանակ
-        $(document).ready(adjustTableForMobile);
     });
 
     function updateDailyTotals(data) {
@@ -1172,13 +1491,13 @@
         }
 
     /* Ensure the left margin is only applied to the next button */
-    #nextDay, #nextDayMobile {
+    #nextDay{
         margin-left: 5px;
         margin-right: 0;
     }
 
     /* Ensure the right margin is only applied to the prev button */
-    #prevDay, #prevDayMobile {
+    #prevDay {
         margin-right: 5px;
         margin-left: 0;
     }
@@ -1233,133 +1552,7 @@
         max-width: 100px; /* Կարող եք փոխել այս արժեքը ըստ ձեր նախընտրության */
     }
 
-    @@media (max-width: 768px) {
-        .table-responsive {
-            font-size: 15px;
-            -webkit-overflow-scrolling: touch;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-
-            .table-responsive::-webkit-scrollbar {
-                display: none;
-            }
-
-            .table-responsive table {
-                width: 120%;
-                border-left: none !important;
-            }
-
-            .table-responsive th:first-child,
-            .hour-cell {
-                position: sticky;
-                left: 0;
-                z-index: 3;
-                background-color: #e0e0e0 !important;
-                border: none !important;
-                outline: 4px solid #4a4a4a;
-                outline-offset: -3px;
-            }
-
-            .table-responsive th:first-child {
-                z-index: 4;
-                outline-width: 4px; /* Վերևի outline-ը 1px-ով հաստացված */
-            }
-
-        .hour-cell:last-child {
-            border-bottom: none !important;
-            outline-width: 4px; /* Ներքևի վերջին ժամի outline-ը 1px-ով հաստացված */
-        }
-
-        .table-responsive td:nth-child(2) {
-            border-left: none !important;
-        }
-
-        .table-responsive td,
-        .table-responsive th {
-            border: 2px solid #4a4a4a;
-        }
-        /* Մեծացնում ենք բոլոր տեքստային էլեմենտների տառաչափերը */
-        body, input, button, .btn, h2, h3, h4, h5, h6, p, span, a, td, th {
-            font-size: 110%; /* Մեծացնում ենք տառաչափը 10%-ով */
-        }
-        /* Մեծացնում ենք կոճակների չափը */
-        .btn {
-            padding: 12px 20px;
-        }
-        /* Մեծացնում ենք մուտքագրման դաշտերի չափը */
-        input[type="date"], input[type="text"] {
-            height: 40px;
-        }
-
-        .mobile-layout {
-            display: flex;
-            flex-direction: column;
-        }
-
-            .mobile-layout .date-controls {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 10px;
-            }
-
-            .mobile-layout #prevDay,
-            .mobile-layout #nextDay {
-                flex: 0 0 auto;
-            }
-
-            .mobile-layout .date-input-wrapper {
-                flex: 1;
-                margin: 0 10px;
-            }
-
-            .mobile-layout .btn-new-appointment {
-                width: 100%;
-                margin-top: 10px;
-                margin-bottom: 20px;
-            }
-
-        .desktop-layout {
-            display: none;
-        }
-
-        .mobile-layout #prevDayMobile,
-        .mobile-layout #nextDayMobile {
-            background-color: #808080;
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s ease;
-        }
-
-            .mobile-layout #prevDayMobile:hover,
-            .mobile-layout #nextDayMobile:hover {
-                background-color: white;
-                color: #808080;
-            }
-
-        .btn-back-to-list {
-            background-color: #232323;
-            color: white;
-            font-size: 1.2rem;
-            padding: 12px 24px;
-            transition: background-color 0.3s ease;
-            display: block;
-            margin: 0 auto;
-            width: fit-content;
-        }
-    }
-
     @@media (min-width: 769px) {
-        .mobile-layout {
-            display: none;
-        }
-
         .desktop-layout {
             display: flex;
         }
@@ -1394,13 +1587,224 @@
                 background-color: #0056b3;
             }
     /* Մոբայլ սարքերի համար ոճեր */
-    @@media (max-width: 768px) {
-        .flatpickr-calendar {
-            font-size: 16px; /* Ավելի մեծ տառաչափ մոբայլ սարքերի համար */
-        }
-
-        .flatpickr-day {
-            line-height: 38px; /* Ավելի մեծ օրերի բջիջներ */
-        }
+    @@media (max-width: 767px) {
+    /* Օրացույցի դաշտի նոր ոճեր */
+    .date-input-wrapper {
+        margin: 15px 0;
     }
+    
+    .datepicker-input {
+        background-color: #ffffff;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 1.1rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .custom-day-button {
+        background-color: #4a4a4a;
+        color: white;
+        border: none;
+        border-radius: 8px;  /* Փոխված է կլորից քառակուսի */
+        width: 40px;
+        height: 40px;
+        margin: 0 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .custom-day-button:hover {
+        background-color: #666666;
+        transform: scale(1.05);
+    }
+
+    /* Քարտերի սլայդ սքրոլ */
+    .appointment-cards {
+        height: calc(100vh - 200px);
+        overflow-y: scroll;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        scroll-behavior: smooth;
+    }
+
+    .appointment-cards::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Նոր նշանակման կոճակ */
+    .btn-new-appointment {
+        width: 80%;
+        margin: 15px auto;
+        display: block;
+        padding: 12px;
+        font-size: 1.1rem;
+        background-color: #4a4a4a;
+        border: none;
+        border-radius: 25px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    /* Քարտերի ոճավորում */
+    .appointment-cards .card {
+        background-color: #404040;
+        border: none;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Կատարված նշանակման քարտի ոճեր */
+    .appointment-cards .completed-appointment {
+        background-color: #ffd700 !important;
+    }
+
+    .appointment-cards .completed-appointment .card-header {
+        background-color: rgba(0, 0, 0, 0.1) !important;
+        border-bottom-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .appointment-cards .completed-appointment .card-body {
+        color: #333333 !important;
+    }
+
+    .appointment-cards .completed-appointment .text-muted {
+        color: #555555 !important;
+    }
+
+    /* Նշանների և տվյալների հավասարեցում */
+    .appointment-info .row {
+        margin: 0 -5px;
+        align-items: center;
+    }
+
+    .appointment-info .row > div {
+        padding: 8px 5px;
+    }
+
+    .appointment-info .col-5 {
+        flex: 0 0 auto;
+        width: 40px;
+        text-align: center;
+    }
+
+    .appointment-info .col-7 {
+        flex: 1;
+        padding-left: 10px;
+    }
+
+    /* Նշանների ոճավորում */
+    .appointment-info i {
+        font-size: 1.3rem;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    /* Հատուկ նշանների գույներ */
+    .appointment-info i.fas.fa-user-circle {
+        color: #ff9ecd;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .appointment-info i.fas.fa-phone {
+        color: #87ceeb;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Մկրատի նշանի փոփոխություն */
+    .appointment-info i.fas.fa-concierge-bell::before {
+        content: "\f0c4";
+    }
+
+    .appointment-info i.fas.fa-scissors {
+        color: #ffd700;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .appointment-info i.fas.fa-money-bill-wave {
+        color: #98fb98;
+        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Ծառայության որոնման դաշտ */
+    .service-selection-container {
+        position: relative;
+        margin-left: -5px;
+    }
+
+    .service-search {
+        background-color: #ffffff;  /* Փոխված է լուսավոր ֆոնի */
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        color: #000000 !important;  /* Փոխված է սև գույնի */
+        border-radius: 10px;
+        padding: 8px 12px;
+        width: 100%;
+    }
+
+    .service-search::placeholder {
+        color: #666666;  /* Placeholder-ի գույնը */
+    }
+
+    /* Կոճակների խումբ */
+    .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+        padding: 0 15px;
+    }
+
+    .button-group .btn {
+        flex: 1;
+        max-width: 120px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .button-group .btn i {
+        font-size: 1rem;
+    }
+
+    /* Քարտի վերնագիր */
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header h5 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: inherit;
+    }
+
+    /* Badge ոճավորում */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background-color: rgba(0, 0, 0, 0.2);
+        color: inherit;
+    }
+}
+
 </style>

@@ -2,116 +2,34 @@
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
-
 @{
     ViewData["Title"] = "Ծառայություններ";
 }
 
-<h1 class="text-center mb-4 page-title">Ծառայություններ</h1>
+<div class="container">
+    <h1 class="text-center mb-4 page-title">Ծառայություններ</h1>
 
-@if (User.IsInRole("Admin"))
-{
-    <p>
-        <a class="btn btn-success" asp-action="Create" style="text-decoration: none;">Ավելացնել Նոր Ծառայություն</a>
-    </p>
-}
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="add-service-container">
+            <a class="btn btn-add-service" asp-action="Create">
+                <span class="add-text">Ավելացնել Նոր Ծառայություն</span>
+                <span class="add-icon">+</span>
+            </a>
+        </div>
+    }
 
-<form class="form-inline my-2 my-lg-0">
-    <div class="input-group">
-        <input type="text" id="serviceSearchString" class="form-control" placeholder="Որոնել Ծառայությունը" aria-label="Search" onkeyup="searchServices()" style="width: 300px;">
+    <div class="search-container">
+        <input type="text" id="serviceSearchString" class="search-input" placeholder="Որոնել Ծառայությունը" aria-label="Search" onkeyup="searchServices()">
+        <i class="fas fa-search search-icon"></i>
     </div>
-</form>
 
-<div id="serviceSearchResults" class="table-responsive">
-    @Html.Partial("_ServiceList", Model)
+    <div id="serviceSearchResults" class="services-grid">
+        @Html.Partial("_ServiceList", Model)
+    </div>
 </div>
 
-<style>
-    body {
-        background-color: #e0e0e0;
-    }
-
-    .page-title {
-        color: #4e4e4e;
-        font-family: 'Arial', sans-serif;
-        font-weight: bold;
-        text-align: center;
-    }
-
-    .btn-success {
-        background-color: #4a4a4a;
-        border-color: #4a4a4a;
-    }
-
-    .btn-success:hover {
-        background-color: #666666;
-        border-color: #666666;
-    }
-
-    .form-inline .input-group .form-control {
-        padding: 10px;
-        margin-bottom: 5px;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 0.3s ease, border-color 0.3s ease;
-        background-color: #4a4a4a;
-        color: white;
-        border: none;
-    }
-
-    .form-inline .input-group .form-control::placeholder {
-        color: #f0f0f0;
-    }
-
-    .form-inline .input-group .form-control:focus {
-        box-shadow: 0 0 10px rgba(128, 128, 128, 0.5);
-        border-color: #808080;
-        background-color: #4a4a4a;
-        color: white;
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    .table {
-        margin-top: 20px;
-        border: 1px solid #ddd;
-        background-color: #f9f9f9;
-        min-width: 600px; /* Ensure the table has a minimum width */
-    }
-
-    .table th, .table td {
-        padding: 12px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-        white-space: nowrap; /* Prevent text wrapping */
-    }
-
-    .table th {
-        background-color: #4a4a4a;
-        color: white;
-    }
-
-    .table tbody tr:hover {
-        background-color: #f1f1f1;
-    }
-
-    .table-responsive::-webkit-scrollbar {
-        display: none;
-    }
-
-    @@media (max-width: 767px) {
-        .table-responsive {
-            border: 0;
-        }
-        .table {
-            width: 100%;
-        }
-    }
-</style>
-
-@* AJAX Command to search service dynamically *@
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script type="text/javascript">
     function searchServices() {
         var searchString = $('#serviceSearchString').val();
@@ -123,6 +41,138 @@
             }
         });
     }
+
+    // Mobile sliding functionality
+    $(document).ready(function() {
+        if (window.innerWidth <= 768) {
+            let startX;
+            let scrollLeft;
+            const slider = document.querySelector('.services-grid');
+
+            slider.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+
+            slider.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const x = e.touches[0].pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2;
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        }
+    });
 </script>
 
+<style>
+    body {
+        background-color: #2c2c2c;
+        color: #e0e0e0;
+        font-family: 'Arial', sans-serif;
+    }
 
+    .page-title {
+        transition: color 0.3s ease;
+    }
+
+        .page-title:hover {
+            color: #808080;
+        }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .page-title {
+        color: #ffffff;
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+    }
+    .add-service-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .btn-add-service {
+        background-color: #4a4a4a;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .btn-add-service:hover {
+        background-color: #5a5a5a;
+    }
+    .add-icon {
+        display: none;
+    }
+    .search-container {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    .search-input {
+        width: 100%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        box-sizing: border-box;
+        border: 2px solid #444;
+        border-radius: 4px;
+        font-size: 16px;
+        background-color: #3c3c3c;
+        color: #e0e0e0;
+        padding-left: 40px;
+    }
+    .search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+    }
+    .services-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: space-between;
+    }
+    @@media (max-width: 768px) {
+        .add-text {
+            display: none;
+        }
+        .add-icon {
+            display: inline;
+            font-size: 24px;
+        }
+        .btn-add-service {
+            padding: 5px 15px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+        .services-grid {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            padding-bottom: 70px;
+        }
+        .services-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        .service-card {
+            margin-top: 20px;
+        }
+    }
+</style>

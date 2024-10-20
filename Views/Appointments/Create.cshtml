@@ -98,17 +98,31 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
         $(document).ready(function () {
+            // Ստանում ենք ամսաթիվը URL-ից
+            function getDateFromUrl() {
+                var urlParams = new URLSearchParams(window.location.search);
+                var dateParam = urlParams.get('date');
+                if (dateParam) {
+                    return new Date(dateParam);
+                }
+                return null;
+            }
+
+            var urlDate = getDateFromUrl();
+            var defaultDate = urlDate ? urlDate : new Date();
+
             flatpickr("#appointment-date-display", {
                 locale: "hy",
                 dateFormat: "d/m/Y",
-                defaultDate: "{{ ViewBag.SelectedDate?.ToString('dd/MM/yyyy') ?? DateTime.Now.ToString('dd/MM/yyyy') }}",
+                defaultDate: defaultDate,
                 onChange: function (selectedDates, dateStr, instance) {
-                    // Update hidden field with the selected date in 'yyyy-mm-dd' format
                     var selectedDate = instance.formatDate(selectedDates[0], 'Y-m-d');
                     $("#appointment-date-picker").val(selectedDate);
                 }
             });
 
+            // Սահմանում ենք սկզբնական արժեքը թաքնված input-ի համար
+            $("#appointment-date-picker").val(flatpickr.formatDate(defaultDate, 'Y-m-d'));
             // Handle pre-selected date from URL or ViewBag
             var selectedDate = "@(ViewBag.SelectedDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))";
             $("#appointment-date-picker").val(selectedDate);

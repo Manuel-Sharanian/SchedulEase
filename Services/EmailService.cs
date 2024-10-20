@@ -23,7 +23,7 @@ public class EmailService : IEmailService
     {
         var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
-        var from = new EmailAddress("info@mariamkayseryan.beauty", "MK");
+        var from = new EmailAddress("info@mariamkayseryan.beauty", "SchedulEase");
         var subject = "Գաղտնաբառի վերականգնում";
         var to = new EmailAddress(toEmail);
         var plainTextContent = $"Գաղտնաբառը վերականգնելու համար սեղմեք հետևյալ հղումը: {callbackUrl}";
@@ -36,7 +36,7 @@ public class EmailService : IEmailService
     {
         var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
-        var from = new EmailAddress("info@mariamkayseryan.beauty", "MK");
+        var from = new EmailAddress("info@mariamkayseryan.beauty", "SchedulEase");
         var subject = "Հաստատեք ձեր էլ. փոստի հասցեն";
         var to = new EmailAddress(toEmail);
         var plainTextContent = $"Խնդրում ենք հաստատել ձեր հաշիվը՝ սեղմելով հետևյալ հղումը. {callbackUrl}";
@@ -49,7 +49,7 @@ public class EmailService : IEmailService
     {
         var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
-        var from = new EmailAddress("info@mariamkayseryan.beauty", "MK");
+        var from = new EmailAddress("info@mariamkayseryan.beauty", "SchedulEase");
         var subject = "Հաստատեք ձեր նոր էլ. փոստի հասցեն";
         var to = new EmailAddress(toEmail);
         var plainTextContent = $"Խնդրում ենք հաստատել ձեր նոր էլ. փոստի հասցեն՝ սեղմելով հետևյալ հղումը: {callbackUrl}";
@@ -63,7 +63,7 @@ public class EmailService : IEmailService
     {
         var apiKey = _configuration["SendGrid:ApiKey"];
         var client = new SendGridClient(apiKey);
-        var from = new EmailAddress("info@mariamkayseryan.beauty", "MK");
+        var from = new EmailAddress("info@mariamkayseryan.beauty", "SchedulEase");
         var to = new EmailAddress(email);
         var msg = MailHelper.CreateSingleEmail(from, to, subject, message, message);
         await client.SendEmailAsync(msg);
