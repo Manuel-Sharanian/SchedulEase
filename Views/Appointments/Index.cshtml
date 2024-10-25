@@ -1623,19 +1623,6 @@
         transform: scale(1.05);
     }
 
-    /* Քարտերի սլայդ սքրոլ */
-    .appointment-cards {
-        height: calc(100vh - 200px);
-        overflow-y: scroll;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        scroll-behavior: smooth;
-    }
-
-    .appointment-cards::-webkit-scrollbar {
-        display: none;
-    }
-
     /* Նոր նշանակման կոճակ */
     .btn-new-appointment {
         width: 80%;
@@ -1649,33 +1636,38 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
     }
+        /* Քարտերի ոճավորում */
+        .appointment-cards .card {
+            background-color: #767676; /* Փոխվել է ավելի բաց մոխրագույնի */
+            border: none;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease; /* Ավելացվել է անիմացիայի համար */
+        }
+            /* Ազատ քարտերի hover էֆեկտ */
+            .appointment-cards .card:not(.completed-appointment):hover {
+                transform: translateY(-5px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+                background-color: #9c9c9c; /* Հովերի ժամանակ մի փոքր ավելի բաց */
+            }
+        /* Կատարված նշանակման քարտի ոճերը մնում են նույնը */
+        .appointment-cards .completed-appointment {
+            background-color: #ffd700 !important;
+        }
 
-    /* Քարտերի ոճավորում */
-    .appointment-cards .card {
-        background-color: #404040;
-        border: none;
-        border-radius: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
+            .appointment-cards .completed-appointment .card-header {
+                background-color: rgba(0, 0, 0, 0.1) !important;
+                border-bottom-color: rgba(0, 0, 0, 0.2);
+            }
 
-    /* Կատարված նշանակման քարտի ոճեր */
-    .appointment-cards .completed-appointment {
-        background-color: #ffd700 !important;
-    }
+            .appointment-cards .completed-appointment .card-body {
+                color: #333333 !important;
+            }
 
-    .appointment-cards .completed-appointment .card-header {
-        background-color: rgba(0, 0, 0, 0.1) !important;
-        border-bottom-color: rgba(0, 0, 0, 0.2);
-    }
-
-    .appointment-cards .completed-appointment .card-body {
-        color: #333333 !important;
-    }
-
-    .appointment-cards .completed-appointment .text-muted {
-        color: #555555 !important;
-    }
+            .appointment-cards .completed-appointment .text-muted {
+                color: #555555 !important;
+            }
 
     /* Նշանների և տվյալների հավասարեցում */
     .appointment-info .row {

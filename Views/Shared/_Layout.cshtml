@@ -55,12 +55,6 @@
                 </div>
             }
             <ul class="nav flex-column main-nav">
-                 @*             @if (User.IsInRole("Admin"))
-                {
-                <li class="nav-item">
-                <a class="nav-link" asp-controller="Clients" asp-action="index">Հաճախորդներ</a>
-                </li>
-                } *@
                 @if (!User.IsInRole("Manager"))
                 {
                     <li class="nav-item">
@@ -74,11 +68,19 @@
                         <i class="fas fa-cut"></i> <span>Ծառայություններ</span>
                     </a>
                 </li>
+@*                 @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Clients" asp-action="index">
+                            <i class="fas fa-user-friends"></i> <span>Հաճախորդներ</span>
+                        </a>
+                    </li>
+                } *@
                 @if (User.IsInRole("Admin"))
                 {
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Admin" asp-action="index">
-                            <i class="fas fa-users"></i> <span>Օգտատերեր</span>
+                            <i class="fas fa-users"></i> <span>Աշխատակիցներ</span>
                         </a>
                     </li>
                 }
