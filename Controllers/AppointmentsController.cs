@@ -170,15 +170,15 @@ namespace BeautySalon.Controllers
             return hourOptions;
         }
 
-        private async Task<bool> IsTimeSlotAvailableForUser(DateTime date, TimeSpan startTime, int duration, string userId, int? currentAppointmentId = null, bool canEditAppointment = false)
+        private async Task<bool> IsTimeSlotAvailableForUser(DateTime date, TimeSpan startTime, int duration, string userId, int? currentAppointmentId = null)
         {
             var now = DateTime.Now;
             var appointmentDateTime = date.Date.Add(startTime);
 
-            // Ստուգում ենք՝ արդյոք նշանակման ժամանակը անցյալում է և թույլատրված չէ խմբագրել
-            if (appointmentDateTime < now && !canEditAppointment)
+            // Ստուգում ենք՝ արդյոք նշանակման ժամանակը անցյալում է
+            if (appointmentDateTime < now)
             {
-                return false;
+                return false; // Վերադարձնում ենք false, եթե նշանակումը անցյալում է
             }
 
             var endTime = startTime.Add(TimeSpan.FromMinutes(duration));
@@ -540,25 +540,19 @@ namespace BeautySalon.Controllers
                     return NotFound();
                 }
 
-                var now = DateTime.Now;
-                var appointmentDateTime = appointment.AppointmentDate.Date.Add(appointment.AppointmentHour);
-                bool isInPast = appointmentDateTime < now;
-
-                // Ստուգում ենք՝ արդյոք նշանակումը անցյալում է և կատարված չէ, կամ օգտատերը Admin է
-                bool canEditAppointment = (isInPast && !appointment.IsCompleted) || isAdmin;
-
                 // Եթե ադմինիստրատոր կամ մենեջեր է և փոխել է օգտատիրոջը
                 if ((isAdmin || isManager) && viewModel.SelectedUserId != appointment.UserId)
                 {
                     // Ստուգում ենք, արդյոք ընտրված ժամը հասանելի է նոր օգտատիրոջ համար
-                    bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, appointment.UserId, appointment.Id, canEditAppointment);
+                    bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, viewModel.SelectedUserId);
                     if (!isAvailable)
                     {
-                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածը զբաղված է կամ գտնվում է անցյալում. Խնդրում ենք ընտրել այլ ժամ:");
+                        ModelState.AddModelError("", "Ընտրված ժամանակահատվածն արդեն զբաղված է ընտրված օգտատիրոջ համար կամ գտնվում է անցյալում: Խնդրում ենք ընտրել այլ ժամ:");
                         viewModel.Users = await GetUserSelectList();
                         ViewBag.HourOptions = GetHourOptions();
                         ViewBag.ReturnUrl = returnUrl;
                         ViewBag.IsAdmin = isAdmin;
+                        ViewBag.IsManager = isManager;
 
                         viewModel.Services = await _context.Services.Select(s => new SelectListItem
                         {
@@ -571,10 +565,10 @@ namespace BeautySalon.Controllers
                     }
                     appointment.UserId = viewModel.SelectedUserId;
                 }
-                else if (!canEditAppointment)
+                else
                 {
                     // Ստուգում ենք, արդյոք ընտրված ժամը հասանելի է
-                    bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, appointment.UserId, appointment.Id, canEditAppointment);
+                    bool isAvailable = await IsTimeSlotAvailableForUser(viewModel.AppointmentDate, viewModel.AppointmentHour, viewModel.Duration, appointment.UserId, appointment.Id);
                     if (!isAvailable)
                     {
                         ModelState.AddModelError("", "Ընտրված ժամանակահատվածը զբաղված է կամ գտնվում է անցյալում. Խնդրում ենք ընտրել այլ ժամ:");
@@ -594,18 +588,17 @@ namespace BeautySalon.Controllers
                     }
                 }
 
-                // Update all properties
+                // Update other properties
                 appointment.FirstName = viewModel.FirstName;
                 appointment.PhoneNumber = viewModel.PhoneNumber;
                 appointment.AppointmentDate = viewModel.AppointmentDate;
                 appointment.AppointmentHour = viewModel.AppointmentHour;
-                appointment.Duration = viewModel.Duration;
 
                 if (!string.IsNullOrEmpty(viewModel.CustomServiceName))
                 {
                     appointment.ServiceId = null;
                     appointment.CustomServiceName = viewModel.CustomServiceName;
-                    appointment.CustomPrice = viewModel.CustomPrice;
+                    appointment.CustomPrice = 0;
                 }
                 else
                 {
@@ -613,6 +606,9 @@ namespace BeautySalon.Controllers
                     appointment.CustomServiceName = null;
                     appointment.CustomPrice = viewModel.CustomPrice;
                 }
+
+                appointment.Duration = viewModel.Duration;
+
 
                 // Թարմացնում ենք CreatedByUsername հատկությունը
                 appointment.CreatedByUsername = currentUserName;

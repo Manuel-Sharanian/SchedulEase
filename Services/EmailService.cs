@@ -88,7 +88,7 @@ public class EmailService : IEmailService
     <p><strong>Էլ. փոստ:</strong> {HtmlEncoder.Default.Encode(userEmail)}</p>
     <p>Այս հայտը հաստատելու համար <a href='{HtmlEncoder.Default.Encode(approveUrl)}'>սեղմեք այստեղ</a>.</p>";
         var msg = MailHelper.CreateSingleEmail(
-            new EmailAddress("info@mariamkayseryan.beauty", "MK"),
+            new EmailAddress("info@mariamkayseryan.beauty", "SchedulEase"),
             new EmailAddress(adminEmail),
             subject,
             plainTextContent,

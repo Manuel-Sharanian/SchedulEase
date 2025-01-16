@@ -68,14 +68,14 @@
                         <i class="fas fa-cut"></i> <span>Ծառայություններ</span>
                     </a>
                 </li>
-@*                 @if (User.IsInRole("Admin"))
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                 {
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Clients" asp-action="index">
                             <i class="fas fa-user-friends"></i> <span>Հաճախորդներ</span>
                         </a>
                     </li>
-                } *@
+                }
                 @if (User.IsInRole("Admin"))
                 {
                     <li class="nav-item">
@@ -84,7 +84,7 @@
                         </a>
                     </li>
                 }
-                @if (User.IsInRole("Manager"))
+                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                 {
                     <li class="nav-item">
                         <a asp-controller="IncomeReport" asp-action="Index" class="nav-link">

@@ -31,6 +31,10 @@ namespace BeautySalon.Models
         [DataType(DataType.Date)]
         public DateTime? FirstAppointmentDate { get; set; }
 
+        [Display(Name = "Վերջին այցի ամսաթիվ")]
+        [DataType(DataType.Date)]
+        public DateTime? LastVisitDate { get; set; }
+
         public ICollection<Appointment>? Appointments { get; set; }
 
     }

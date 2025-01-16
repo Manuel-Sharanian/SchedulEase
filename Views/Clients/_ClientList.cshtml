@@ -6,11 +6,12 @@
 <table class="table table-bordered table-hover">
     <thead class="thead-light">
         <tr>
-            <th style="width: 20%;">@Html.DisplayNameFor(model => model.FirstName)</th>
-            <th style="width: 20%;">@Html.DisplayNameFor(model => model.LastName)</th>
-            <th style="width: 20%;">@Html.DisplayNameFor(model => model.DateOfBirth)</th>
-            <th style="width: 20%;">@Html.DisplayNameFor(model => model.PhoneNumber)</th>
-            <th style="width: 10%;">@Html.DisplayNameFor(model => model.FirstAppointmentDate)</th>
+            <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstName)</th>
+            <th style="width: 15%;">@Html.DisplayNameFor(model => model.LastName)</th>
+            <th style="width: 15%;">@Html.DisplayNameFor(model => model.DateOfBirth)</th>
+            <th style="width: 15%;">@Html.DisplayNameFor(model => model.PhoneNumber)</th>
+            <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstAppointmentDate)</th>
+            <th style="width: 15%;">@Html.DisplayNameFor(model => model.LastVisitDate)</th>
             @if (User.IsInRole("Admin"))
             {
                 <th style="width: 10%;"></th>
@@ -26,6 +27,7 @@
                 <td>@Html.DisplayFor(modelItem => item.DateOfBirth)</td>
                 <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
                 <td>@Html.DisplayFor(modelItem => item.FirstAppointmentDate)</td>
+                <td>@Html.DisplayFor(modelItem => item.LastVisitDate)</td>
                 @if (User.IsInRole("Admin"))
                 {
                     <td>
